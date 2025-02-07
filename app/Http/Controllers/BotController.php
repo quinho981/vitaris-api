@@ -10,7 +10,7 @@ class BotController extends Controller
 {
     public function generateAnamnese(Request $request) {
         $response = Groq::chat()->completions()->create([
-            'model' => 'llama-3.1-70b-versatile',
+            'model' => 'llama-3.3-70b-versatile',
             'messages' => [
                 [
                     'role' => 'user', 
