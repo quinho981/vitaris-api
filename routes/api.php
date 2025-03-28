@@ -2,8 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\DocumentGenerationController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\TranscriptController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,3 +13,4 @@ Route::get('/tokens', [AuthController::class, 'tokens'])->middleware('auth:sanct
 Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken'])->middleware('auth:sanctum');
 
 Route::post('generate-document', [DocumentController::class, 'generate'])->middleware('auth:sanctum');
+Route::get('user/transcripts', [TranscriptController::class, 'indexByUser'])->middleware('auth:sanctum');
