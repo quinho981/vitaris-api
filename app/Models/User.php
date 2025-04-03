@@ -46,4 +46,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function plans()
+    {
+        return $this->belongsToMany(Plan::class, 'user_plans', 'user_id', 'plan_id')
+                    ->withTimestamps()
+                    ->withPivot(['unsubscription_at', 'active'])
+                    ->latest();
+    }
 }

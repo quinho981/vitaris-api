@@ -14,8 +14,9 @@ class Plan extends Model
         'name'
     ];
 
-    public function userPlan(): HasOne
+    public function users()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsToMany(User::class, 'user_plans', 'plan_id', 'user_id')
+                    ->withTimestamps();
     }
 }

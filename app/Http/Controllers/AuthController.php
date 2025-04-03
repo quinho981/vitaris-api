@@ -57,7 +57,13 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $userId = $request->user()->id;
+
+        $user = User::select(['id', 'name', 'email'])
+                    ->with('plans')
+                    ->find($userId);
+        
+        return response()->json($user);
     }
 
     public function tokens(Request $request)
