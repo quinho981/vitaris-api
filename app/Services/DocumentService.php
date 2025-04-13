@@ -28,7 +28,7 @@ class DocumentService
 
     public function generateDocumentAndStore($request): JsonResponse
     {
-        $documentContent = $this->generateLlmResponse($request);
+        $documentContent = $this->generateLlmResponse($request['conversation']);
 
         DB::transaction(function () use ($request, $documentContent) {
             $transcript = $this->transcriptService->storeTranscript([
