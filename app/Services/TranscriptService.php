@@ -24,6 +24,6 @@ class TranscriptService
             ->where('user_id', $userId)
             ->select('id', 'title', 'created_at')
             ->latest()
-            ->get();
+            ->paginate(10);
     }
 }
