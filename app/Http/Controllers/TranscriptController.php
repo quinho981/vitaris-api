@@ -23,6 +23,6 @@ class TranscriptController extends Controller
     }
 
     public function delete(int $id) {
-        return $this->transcriptService->deleteTranscriptAndDocument($id);
+        return $this->transcriptService->deleteTranscript($id);
     }
 }

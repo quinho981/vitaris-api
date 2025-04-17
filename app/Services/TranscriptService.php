@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Transcript;
+use Illuminate\Http\JsonResponse;
 
 class TranscriptService
 {
@@ -27,7 +28,7 @@ class TranscriptService
             ->paginate(10);
     }
 
-    public function deleteTranscriptAndDocument(int $id): bool
+    public function deleteTranscript(int $id): JsonResponse|bool
     {
         $transcript = $this->transcript->find($id);
 
@@ -35,6 +36,9 @@ class TranscriptService
             return false;
         }
 
-        return $transcript->delete();
+        return response()->json([
+            'success' => $transcript->delete(),
+            'message' => 'Transcript deleted successfully',
+        ], 200);
     }
 }
