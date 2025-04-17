@@ -14,3 +14,4 @@ Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken'])->middlewar
 
 Route::post('generate-document', [DocumentController::class, 'generate'])->middleware('auth:sanctum');
 Route::get('user/transcripts', [TranscriptController::class, 'indexByUser'])->middleware('auth:sanctum');
+Route::delete('transcripts/{id}', [TranscriptController::class, 'delete']);

@@ -26,4 +26,15 @@ class TranscriptService
             ->latest()
             ->paginate(10);
     }
+
+    public function deleteTranscriptAndDocument(int $id): bool
+    {
+        $transcript = $this->transcript->find($id);
+
+        if (!$transcript) {
+            return false;
+        }
+
+        return $transcript->delete();
+    }
 }

@@ -21,4 +21,8 @@ class TranscriptController extends Controller
         
         return $this->transcriptService->getTitleUserTranscripts($userId);
     }
+
+    public function delete(int $id) {
+        return $this->transcriptService->deleteTranscriptAndDocument($id);
+    }
 }
