@@ -22,6 +22,11 @@ class TranscriptController extends Controller
         return $this->transcriptService->getTitleUserTranscripts($userId);
     }
 
+    public function update() {
+        $request = request()->all();
+        return $this->transcriptService->updateTranscript($request['id'], $request);
+    }
+
     public function delete(int $id) {
         return $this->transcriptService->deleteTranscript($id);
     }
