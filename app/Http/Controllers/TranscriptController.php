@@ -21,6 +21,12 @@ class TranscriptController extends Controller
         
         return $this->transcriptService->getTitleUserTranscripts($userId);
     }
+    
+    public function indexByUserPerDate() {
+        $userId = Auth::id();
+        
+        return $this->transcriptService->getTitleUserTranscriptsPerDate($userId);
+    }
 
     public function update() {
         $request = request()->all();
