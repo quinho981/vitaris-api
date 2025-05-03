@@ -28,6 +28,10 @@ class TranscriptController extends Controller
         return $this->transcriptService->getTitleUserTranscriptsPerDate($userId);
     }
 
+    public function show(int $id) {
+        return $this->transcriptService->getTranscriptAndDocument($id);
+    }
+
     public function update() {
         $request = request()->all();
         return $this->transcriptService->updateTranscript($request['id'], $request);

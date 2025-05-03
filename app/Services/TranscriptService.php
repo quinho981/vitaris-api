@@ -43,6 +43,14 @@ class TranscriptService
             ->paginate(10);
     }
 
+    public function getTranscriptAndDocument(int $id): object
+    {
+        return $this->transcript
+            ->with('document:id,transcript_id,result,created_at')
+            ->where('id', $id)
+            ->firstOrFail(['id', 'title', 'conversation', 'status', 'created_at']);
+    }
+
     public function getTitleUserTranscriptsPerDate(int $userId): object
     {
         $paginator = $this->transcript
