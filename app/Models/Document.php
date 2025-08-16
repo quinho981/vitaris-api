@@ -13,7 +13,7 @@ class Document extends Model
     protected $fillable = [
         'transcript_id',
         'document_type_id',
-        'title',
+        'patient',
         'result'
     ];
 

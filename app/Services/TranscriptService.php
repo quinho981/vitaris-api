@@ -38,7 +38,7 @@ class TranscriptService
     {
         return $this->transcript
             ->where('user_id', $userId)
-            ->select('id', 'title', 'created_at')
+            ->select('id', 'patient', 'created_at')
             ->latest()
             ->paginate(10);
     }
@@ -48,14 +48,14 @@ class TranscriptService
         return $this->transcript
             ->with('document:id,transcript_id,result,created_at')
             ->where('id', $id)
-            ->firstOrFail(['id', 'title', 'conversation', 'status', 'created_at']);
+            ->firstOrFail(['id', 'patient', 'conversation', 'status', 'created_at']);
     }
 
     public function getTitleUserTranscriptsPerDate(int $userId): object
     {
         $paginator = $this->transcript
             ->where('user_id', $userId)
-            ->select('id','title','created_at')
+            ->select('id', 'patient', 'created_at')
             ->latest()
             ->paginate(15);
 

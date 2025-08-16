@@ -29,30 +29,35 @@ class DocumentService
     public function generateDocumentAndStore($request): JsonResponse
     {
         $documentContent = $this->generateLlmResponse($request['conversation']);
-        $documentContent['title'] = $request['title'] ?? $documentContent['title'];
+        $documentContent['patient'] = $request['patient'] ?? $documentContent['title'];
 
-        DB::transaction(function () use ($request, $documentContent) {
+        $transcript = DB::transaction(function () use ($request, $documentContent) {
             $transcript = $this->transcriptService->storeTranscript([
                 'user_id' => Auth::id(),
-                'title' => $documentContent['title'],
+                'patient' => $documentContent['patient'],
                 'status' => $request['status'],
                 'conversation' => $request['conversation']
             ]);
 
             $transcript->document()->create([
                 'document_type_id' => 1,
-                'title' => $documentContent['title'],
+                'patient' => $documentContent['patient'],
                 'result' => $documentContent['content']
             ]);
+
+            return $transcript;
         });
         
         return response()->json([
+            'transcript_id' => $transcript->id,
             'content' => $documentContent['content']
         ]);
     }
 
-    public function generateLlmResponse(string $context): array
+    public function generateLlmResponse($context): array
     {
+        $context = $this->mergeContextChunks($context);
+
         $promptTemplate = config('prompts.anamnesis');
         $prompt = str_replace('{context}', $context, $promptTemplate);
         
@@ -78,5 +83,15 @@ class DocumentService
         preg_match("/<p class='text-xl font-bold mb-2'>(.*?)<\/p>/", $content, $matches);
         
         return $matches[1] ?? 'Consulta ' . Carbon::now()->format('Y/m/d H:i:s');
+    }
+
+    public function mergeContextChunks($contextChunks): string
+    {
+        $mergedContext = '';
+        foreach ($contextChunks as $chunk) {
+            $mergedContext .= $chunk['text'] . ' ';
+        }
+        return trim($mergedContext);    
+
     }
 }

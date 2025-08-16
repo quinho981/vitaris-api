@@ -13,9 +13,13 @@ class Transcript extends Model
 
     protected $fillable = [
         'user_id',
-        'title',
+        'patient',
         'conversation',
         'status'
+    ];
+
+    protected $casts = [
+        'conversation' => 'array',
     ];
 
     public function user(): BelongsTo 
