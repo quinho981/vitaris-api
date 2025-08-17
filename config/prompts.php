@@ -6,7 +6,7 @@ return [
         and organize it into structured sections. Follow the format below:
 
         **Title:** Generate a concise title that summarizes the essence of the anamnese and include it in the following tag:
-        <h2><strong>{title}</strong></h2>
+        <h2><strong>{title}</strong></h2><p></p>
 
         You are accepting the context of a medical history conversation between a doctor and a patient. Interpret the lines considering:
 
