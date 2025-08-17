@@ -48,7 +48,7 @@ class TranscriptService
         return $this->transcript
             ->with('document:id,transcript_id,result,created_at')
             ->where('id', $id)
-            ->firstOrFail(['id', 'patient', 'conversation', 'status', 'created_at']);
+            ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }
 
     public function getTitleUserTranscriptsPerDate(int $userId): object

@@ -15,7 +15,7 @@ class Transcript extends Model
         'user_id',
         'patient',
         'conversation',
-        'status'
+        'end_conversation_time'
     ];
 
     protected $casts = [

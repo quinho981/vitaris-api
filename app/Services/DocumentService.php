@@ -26,7 +26,7 @@ class DocumentService
         return Document::create($data, $transcriptId);
     }
 
-    public function generateDocumentAndStore($request): JsonResponse
+    public function generateDocumentAndStore($request)
     {
         $documentContent = $this->generateLlmResponse($request['conversation']);
         $documentContent['patient'] = $request['patient'] ?? $documentContent['title'];
@@ -35,8 +35,10 @@ class DocumentService
             $transcript = $this->transcriptService->storeTranscript([
                 'user_id' => Auth::id(),
                 'patient' => $documentContent['patient'],
-                'status' => $request['status'],
-                'conversation' => $request['conversation']
+                'conversation' => $request['conversation'],
+                'template_id' => $request['template'],
+                'type_id' => $request['type'],
+                'end_conversation_time' => $request['endConversationTime']
             ]);
 
             $transcript->document()->create([
