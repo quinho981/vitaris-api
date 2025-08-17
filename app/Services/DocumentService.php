@@ -82,7 +82,7 @@ class DocumentService
     }
 
     public function extractTitleFromContent($content) {
-        preg_match("/<p class='text-xl font-bold mb-2'>(.*?)<\/p>/", $content, $matches);
+        preg_match("/<h2><strong>(.*?)<\/strong><\/h2>/", $content, $matches);
         
         return $matches[1] ?? 'Consulta ' . Carbon::now()->format('Y/m/d H:i:s');
     }
