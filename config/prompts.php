@@ -14,7 +14,7 @@ return [
         - Anthropometric Measurements (If available)
         - Historical Clinic
         - Diagnostic Suspicion (CID)
-            - Separate each orientation with: <li>{cid}</li> If exists
+            - Separate each cid with: <li>{code:cid}</li> If exists. Do not add text between cids, only code and name that refers cid
         - Conduct and Referral
         - Medical and Personal History
         - Orientation

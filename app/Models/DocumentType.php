@@ -10,6 +10,8 @@ class DocumentType extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'document_types';
+
     protected $fillable = [
         'type'
     ];
