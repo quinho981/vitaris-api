@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentTypesController;
 use App\Http\Controllers\TranscriptController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,5 @@ Route::get('user/transcripts/perDate', [TranscriptController::class, 'indexByUse
 Route::get('transcripts/{id}', [TranscriptController::class, 'show'])->middleware('auth:sanctum');
 Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->middleware('auth:sanctum');
 Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
+
+Route::get('templates', [DocumentTypesController::class, 'index'])->middleware('auth:sanctum');

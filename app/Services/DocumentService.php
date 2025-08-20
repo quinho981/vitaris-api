@@ -36,13 +36,13 @@ class DocumentService
                 'user_id' => Auth::id(),
                 'patient' => $documentContent['patient'],
                 'conversation' => $request['conversation'],
-                'template_id' => $request['template'],
-                'type_id' => $request['type'],
+                // 'template_id' => $request['template'],
+                // 'type_id' => $request['type'],
                 'end_conversation_time' => $request['endConversationTime']
             ]);
 
             $transcript->document()->create([
-                'document_type_id' => 1,
+                'document_type_id' => $request['template'],
                 'patient' => $documentContent['patient'],
                 'result' => $documentContent['content']
             ]);
