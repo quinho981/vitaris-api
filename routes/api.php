@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\DocumentTypesController;
+use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\TranscriptController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +20,4 @@ Route::get('transcripts/{id}', [TranscriptController::class, 'show'])->middlewar
 Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->middleware('auth:sanctum');
 Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
 
-Route::get('templates', [DocumentTypesController::class, 'index'])->middleware('auth:sanctum');
+Route::get('templates', [DocumentTemplateController::class, 'index'])->middleware('auth:sanctum');

@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('document_templates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transcript_id')->constrained()->onDelete('cascade');
-            $table->foreignId('document_template_id')->constrained()->onDelete('cascade');
-            $table->string('title');
-            $table->text('result');
+            $table->string('name');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('document_templates');
     }
 };

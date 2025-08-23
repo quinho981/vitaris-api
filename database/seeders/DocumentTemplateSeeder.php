@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\DocumentType;
+use App\Models\DocumentTemplate;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class DocumentTypeSeeder extends Seeder
+class DocumentTemplateSeeder extends Seeder
 {
-    const TYPES = [
+    const TEMPLATES = [
         [ 'id' => 1, 'name' => 'Cardiologia' ],
         [ 'id' => 2, 'name' => 'Ortopedia' ],
         [ 'id' => 3, 'name' => 'Neurologia' ],
@@ -22,10 +22,10 @@ class DocumentTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        foreach (self::TYPES as $type) {
-            DocumentType::updateOrCreate(
+        foreach (self::TEMPLATES as $type) {
+            DocumentTemplate::updateOrCreate(
                 ['id' => $type['id']],
-                ['type' => $type['name']]
+                ['name' => $type['name']]
             );
         }
     }

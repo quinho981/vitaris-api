@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('transcripts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('document_type_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('conversation');
             $table->string('status');

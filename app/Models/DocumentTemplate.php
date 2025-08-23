@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DocumentType extends Model
+class DocumentTemplate extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'document_types';
+    protected $table = 'document_templates';
 
     protected $fillable = [
-        'type'
+        'name'
     ];
 
-    public function transcript(): HasOne
+    public function document(): HasOne
     {
-        return $this->hasOne(Transcript::class);
+        return $this->hasOne(Document::class);
     }
 }

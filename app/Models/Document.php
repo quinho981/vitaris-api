@@ -12,7 +12,7 @@ class Document extends Model
 
     protected $fillable = [
         'transcript_id',
-        'document_type_id',
+        'document_template_id',
         'patient',
         'result'
     ];
@@ -22,8 +22,8 @@ class Document extends Model
         return $this->belongsTo(Transcript::class);
     }
 
-    public function documentType(): BelongsTo 
+    public function documentTemplate(): BelongsTo 
     {
-        return $this->belongsTo(DocumentType::class);
+        return $this->belongsTo(DocumentTemplate::class);
     }
 }
