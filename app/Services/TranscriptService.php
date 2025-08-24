@@ -46,7 +46,8 @@ class TranscriptService
     public function getTranscriptAndDocument(int $id): object
     {
         return $this->transcript
-            ->with('document:id,transcript_id,result,created_at')
+            ->with('document:id,transcript_id,document_template_id,result,created_at')
+            ->with('document.documentTemplate:id,name')
             ->where('id', $id)
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }
@@ -103,5 +104,14 @@ class TranscriptService
             'success' => $transcript->delete(),
             'message' => 'Transcript deleted successfully',
         ], 200);
+    }
+
+    public function getConversations(int $id): object
+    {
+        $transcript = $this->transcript
+            ->where('id', $id)
+            ->first(['id', 'conversation']);
+
+        return $transcript;
     }
 }

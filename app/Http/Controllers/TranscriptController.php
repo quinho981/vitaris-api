@@ -40,4 +40,8 @@ class TranscriptController extends Controller
     public function delete(int $id) {
         return $this->transcriptService->deleteTranscript($id);
     }
+
+    public function getConversations(int $id) {
+        return $this->transcriptService->getConversations($id);
+    }
 }
