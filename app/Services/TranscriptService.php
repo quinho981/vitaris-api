@@ -37,6 +37,10 @@ class TranscriptService
     public function getTitleUserTranscripts(int $userId): object
     {
         return $this->transcript
+            ->with([
+                'document:id,transcript_id,document_template_id',
+                'document.documentTemplate:id,name'
+            ])
             ->where('user_id', $userId)
             ->select('id', 'patient', 'created_at')
             ->latest()
