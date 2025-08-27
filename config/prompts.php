@@ -33,4 +33,27 @@ return [
 
         Always respond in Portuguese.
     ",
+    "ai_insights" => "
+        You are a medical decision support assistant.
+        Based on the provided text, extract and organize the information into a **single JSON object** called `medical_analysis`:
+
+        {
+            'medical_analysis': {
+                'main_topics': ['topic', 'topic2', 'topic3'],
+                'identified_symptoms': ['symptoms', 'symptoms2', 'symptoms3'],
+                'possible_diagnoses': ['diagnoses', 'diagnoses2', 'diagnoses3']
+            }
+        }
+
+        IMPORTANT:
+        - Respond **only in valid JSON**, without additional text.
+        - Use **the keys exactly as above**.
+        - Always write in Portuguese.
+        - Each value must be **an array of strings**, even if there is only one item.
+
+        Text for Analysis:
+        {context}
+
+        Always respond in Portuguese.
+    ",
 ];

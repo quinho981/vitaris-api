@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Document;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use LucianoTonet\GroqLaravel\Facades\Groq;
 
@@ -28,7 +30,7 @@ class DocumentService
 
     public function generateDocumentAndStore($request)
     {
-        $documentContent = $this->generateLlmResponse($request['conversation']);
+        $documentContent = $this->generateLlmDocument($request['conversation']);
         $documentContent['patient'] = $request['patient'] ?? $documentContent['title'];
 
         $transcript = DB::transaction(function () use ($request, $documentContent) {
@@ -40,11 +42,13 @@ class DocumentService
                 'end_conversation_time' => $request['endConversationTime']
             ]);
 
-            $transcript->document()->create([
+            $document = $transcript->document()->create([
                 'document_template_id' => $request['template'],
                 'patient' => $documentContent['patient'],
                 'result' => $documentContent['content']
             ]);
+
+            ProcessGenerateInsightsAI::dispatch($document->id, $request['conversation']);
 
             return $transcript;
         });
@@ -55,29 +59,50 @@ class DocumentService
         ]);
     }
 
-    public function generateLlmResponse($context): array
+    public function generateLlmDocument($context): array
     {
-        $context = $this->mergeContextChunks($context);
+        $response = $this->llmResponseByTemplate($context, 'anamnesis');
 
-        $promptTemplate = config('prompts.anamnesis');
-        $prompt = str_replace('{context}', $context, $promptTemplate);
-        
-        $response = Groq::chat()->completions()->create([
-            'model' => self::MODEL_NAME,
-            'messages' => [
-                [
-                    'role' => 'user', 
-                    'content' => $prompt
-                ],
-            ],
-        ]);
-
-        $title = $this->extractTitleFromContent($response['choices'][0]['message']['content']);
+        $title = $this->extractTitleFromContent($response);
         
         return [
             'title' => $title,
-            'content' => $response['choices'][0]['message']['content']
+            'content' => $response
         ];
+    }
+
+    public function llmResponseByTemplate($context, $template, bool $forceJsonFormat = false): string
+    {
+        $context = $this->mergeContextChunks($context);
+
+        $promptTemplate = config("prompts.$template");
+        $prompt = str_replace('{context}', $context, $promptTemplate);
+
+        $payload = [
+            'model' => self::MODEL_NAME,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ],
+            ],
+        ];
+
+        if ($forceJsonFormat) {
+            Log::info('Passou pelo json');
+
+            $payload['response_format'] = [ 'type' => 'json_object' ];
+        }
+
+        try {
+            $response = Groq::chat()->completions()->create($payload);
+            Log::info('LLM Response: ' . json_encode($response));
+        } catch (\Throwable $e) {
+            Log::error('Erro no Groq: ' . $e->getMessage());
+            throw $e;
+        }
+
+        return $response['choices'][0]['message']['content'];
     }
 
     public function extractTitleFromContent($content) {
@@ -94,5 +119,10 @@ class DocumentService
         }
         return trim($mergedContext);    
 
+    }
+
+    public function generateInsightsAI($context) {
+        $insights = $this->llmResponseByTemplate($context, 'ai_insights', true);
+        return json_decode($insights, true);
     }
 }
