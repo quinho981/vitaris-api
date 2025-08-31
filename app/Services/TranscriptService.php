@@ -50,8 +50,11 @@ class TranscriptService
     public function getTranscriptAndDocument(int $id): object
     {
         return $this->transcript
-            ->with('document:id,transcript_id,document_template_id,result,created_at')
-            ->with('document.documentTemplate:id,name')
+            ->with([
+                'document:id,transcript_id,document_template_id,result,created_at',
+                'document.documentTemplate:id,name',
+                'document.ai_insights:id,document_id,main_topics,identified_symptoms,possible_diagnoses'
+            ])
             ->where('id', $id)
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }

@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\TranscriptController;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -22,3 +23,35 @@ Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->midd
 Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
 
 Route::get('templates', [DocumentTemplateController::class, 'index'])->middleware('auth:sanctum');
+
+Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
+    return response()->stream(function () use ($documentId) {
+
+        $timeout = 15;
+        $start = time();
+        while (true) {
+            $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
+
+            if ($response) {
+                echo "data: " . json_encode($response) . "\n\n";
+                ob_flush();
+                flush();
+                break; // encerra a conexão após enviar
+            }
+
+            if ((time() - $start) > $timeout) {
+                echo "event: timeout\n";
+                echo "data: {}\n\n";
+                ob_flush();
+                flush();
+                break;
+            }
+
+            sleep(1);
+        }
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
+});

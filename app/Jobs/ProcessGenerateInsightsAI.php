@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Services\DocumentService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ProcessGenerateInsightsAI implements ShouldQueue
@@ -35,11 +36,17 @@ class ProcessGenerateInsightsAI implements ShouldQueue
             $insights = $documentService->generateInsightsAI($this->conversation);
             // Log::info('Storing AI Insights for Document ID ' . $this->documentId . ': ' . $insights);
 
-            $document->ai_insights()->create([
+            $response = $document->ai_insights()->create([
                 'main_topics' => $insights['medical_analysis']['main_topics'] ?? [],
                 'identified_symptoms' => $insights['medical_analysis']['identified_symptoms'] ?? [],
                 'possible_diagnoses' => $insights['medical_analysis']['possible_diagnoses'] ?? [],
             ]);
+
+            Cache::put("insights_ai_{$this->documentId}", [
+                'main_topics' => $response->main_topics,
+                'identified_symptoms' => $response->identified_symptoms,
+                'possible_diagnoses' => $response->possible_diagnoses,
+            ], 60);
         }
     }
 }
