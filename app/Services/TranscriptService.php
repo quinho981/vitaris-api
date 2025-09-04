@@ -42,7 +42,7 @@ class TranscriptService
                 'document.documentTemplate:id,name'
             ])
             ->where('user_id', $userId)
-            ->select('id', 'patient', 'created_at')
+            ->select('id', 'patient', 'end_conversation_time', 'created_at')
             ->latest()
             ->paginate(10);
     }
