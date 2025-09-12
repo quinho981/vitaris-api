@@ -38,7 +38,7 @@ class DocumentService
                 'user_id' => Auth::id(),
                 'patient' => $documentContent['patient'],
                 'conversation' => $request['conversation'],
-                'document_type_id' => $request['type'],
+                'transcript_type_id' => $request['type'],
                 'end_conversation_time' => $request['endConversationTime']
             ]);
 

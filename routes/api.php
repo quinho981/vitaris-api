@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\TranscriptController;
+use App\Http\Controllers\TranscriptTypesController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,7 @@ Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->midd
 Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
 
 Route::get('templates', [DocumentTemplateController::class, 'index'])->middleware('auth:sanctum');
+Route::get('types', [TranscriptTypesController::class, 'index'])->middleware('auth:sanctum');
 
 Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
     return response()->stream(function () use ($documentId) {

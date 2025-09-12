@@ -16,7 +16,7 @@ class Transcript extends Model
         'patient',
         'conversation',
         'end_conversation_time',
-        'document_type_id',
+        'transcript_type_id',
     ];
 
     protected $casts = [
@@ -33,8 +33,8 @@ class Transcript extends Model
         return $this->hasOne(Document::class);
     }
 
-    public function documentType(): BelongsTo 
+    public function transcriptType(): BelongsTo 
     {
-        return $this->belongsTo(DocumentType::class);
+        return $this->belongsTo(TranscriptType::class);
     }
 }

@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             DocumentTemplateSeeder::class,
+            TranscriptTypesSeeder::class,
+            PlansSeeder::class
         ]);
     }
 }

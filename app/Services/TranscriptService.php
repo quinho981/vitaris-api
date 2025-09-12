@@ -39,10 +39,11 @@ class TranscriptService
         return $this->transcript
             ->with([
                 'document:id,transcript_id,document_template_id',
-                'document.documentTemplate:id,name'
+                'document.documentTemplate:id,name',
+                'transcriptType:id,type'
             ])
             ->where('user_id', $userId)
-            ->select('id', 'patient', 'end_conversation_time', 'created_at')
+            ->select('id', 'transcript_type_id', 'patient', 'end_conversation_time', 'created_at')
             ->latest()
             ->paginate(10);
     }

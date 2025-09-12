@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DocumentType extends Model
+class TranscriptType extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'document_types';
+    protected $table = 'transcript_types';
 
     protected $fillable = [
         'type'

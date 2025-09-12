@@ -24,6 +24,12 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Vincular usuário a plano free
+        $user->plans()->attach(1, [
+            'active' => true,
+            'unsubscription_at' => null,
+        ]);
+
         return response()->json(['message' => 'User registered successfully'], 201);
     }
 
