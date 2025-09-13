@@ -17,7 +17,7 @@ Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken'])->middlewar
 
 Route::post('generate-document', [DocumentController::class, 'generate'])->middleware('auth:sanctum');
 Route::get('user/transcripts', [TranscriptController::class, 'indexByUser'])->middleware('auth:sanctum');
-Route::get('user/transcripts/perDate', [TranscriptController::class, 'indexByUserPerDate'])->middleware('auth:sanctum');
+// Route::get('user/transcripts/perDate', [TranscriptController::class, 'indexByUserPerDate'])->middleware('auth:sanctum');
 Route::get('transcripts/{id}', [TranscriptController::class, 'show'])->middleware('auth:sanctum');
 Route::get('transcripts/{id}/conversations', [TranscriptController::class, 'getConversations'])->middleware('auth:sanctum');
 Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->middleware('auth:sanctum');

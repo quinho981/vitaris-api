@@ -17,10 +17,12 @@ class Transcript extends Model
         'conversation',
         'end_conversation_time',
         'transcript_type_id',
+        'file_size'
     ];
 
     protected $casts = [
         'conversation' => 'array',
+        'file_size' => 'integer',
     ];
 
     public function user(): BelongsTo 

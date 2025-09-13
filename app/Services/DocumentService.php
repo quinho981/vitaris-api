@@ -39,7 +39,8 @@ class DocumentService
                 'patient' => $documentContent['patient'],
                 'conversation' => $request['conversation'],
                 'transcript_type_id' => $request['type'],
-                'end_conversation_time' => $request['endConversationTime']
+                'end_conversation_time' => $request['endConversationTime'],
+                'file_size' => $request['fileSize'] ?? null
             ]);
 
             $document = $transcript->document()->create([

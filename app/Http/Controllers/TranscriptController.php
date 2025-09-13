@@ -19,14 +19,14 @@ class TranscriptController extends Controller
     public function indexByUser() {
         $userId = Auth::id(); 
         
-        return $this->transcriptService->getTitleUserTranscripts($userId);
+        return $this->transcriptService->getUserTranscripts($userId);
     }
     
-    public function indexByUserPerDate() {
-        $userId = Auth::id();
+    // public function indexByUserPerDate() {
+    //     $userId = Auth::id();
         
-        return $this->transcriptService->getTitleUserTranscriptsPerDate($userId);
-    }
+    //     return $this->transcriptService->getTitleUserTranscriptsPerDate($userId);
+    // }
 
     public function show(int $id) {
         return $this->transcriptService->getTranscriptAndDocument($id);

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transcripts', function (Blueprint $table) {
-            $table->bigInteger('end_conversation_time')->nullable()->after('result');
+            $table->string('file_size')->nullable()->after('end_conversation_time');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transcripts', function (Blueprint $table) {
-            $table->dropColumn('end_conversation_time');
+            $table->dropColumn('file_size');
         });
     }
 };
