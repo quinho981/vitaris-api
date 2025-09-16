@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Transcript;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,7 +37,39 @@ class TranscriptService
         ], 200);
     }
 
-    public function getUserTranscripts(int $userId): object
+    public function getUserTranscripts(int $userId): LengthAwarePaginator
+    {
+        return $this->baseTranscriptHistoryQuery()
+            ->where('user_id', $userId)
+            ->paginate(10);
+    }
+
+    public function searchUserTranscripts($request): Collection
+    {
+        $username = $request['user'] ?? null;
+        $date = $request['date'] ?? null;
+        $type = $request['type'] ?? null;
+
+        $query = $this->baseTranscriptHistoryQuery();
+
+        if($username) {
+            $query->where('patient', 'ILIKE', "%{$username}%");
+        }
+
+        if($date) {
+            $date = Carbon::parse($request['date'])->toDateString();
+
+            $query->whereDate('created_at', $date);
+        }
+
+        if ($type) {
+            $query->where('transcript_type_id', $type);
+        }
+         
+        return $query->limit(30)->get();
+    }
+
+    private function baseTranscriptHistoryQuery()
     {
         return $this->transcript
             ->with([
@@ -43,10 +77,8 @@ class TranscriptService
                 'document.documentTemplate:id,name',
                 'transcriptType:id,type'
             ])
-            ->where('user_id', $userId)
-            ->select('id', 'transcript_type_id', 'patient', 'end_conversation_time', 'file_size', 'created_at')
-            ->latest()
-            ->paginate(10);
+            ->select(['id', 'transcript_type_id', 'patient', 'end_conversation_time', 'file_size', 'description', 'created_at'])
+            ->latest();
     }
 
     public function getTranscriptAndDocument(int $id): object
@@ -60,46 +92,6 @@ class TranscriptService
             ->where('id', $id)
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }
-
-    // public function getTitleUserTranscriptsPerDate(int $userId): object
-    // {
-    //     $paginator = $this->transcript
-    //         ->where('user_id', $userId)
-    //         ->select('id', 'patient', 'created_at')
-    //         ->latest()
-    //         ->paginate(15);
-
-    //     $bucketed = $paginator
-    //         ->getCollection()
-    //         ->groupBy(function($t) {
-    //             $dt = $t->created_at;
-    //             if ($dt->isToday()) {
-    //                 return 'Hoje';
-    //             }
-    //             if ($dt->isYesterday()) {
-    //                 return 'Ontem';
-    //             }
-    //             if ($dt->greaterThan(now()->subDays(7))) {
-    //                 return 'Últimos 7 dias';
-    //             }
-    //             return 'Mais de 30 dias';
-    //         });
-
-    //     $grouped = $bucketed->map(function($items, $label) {
-    //         return [
-    //             'label' => $label,
-    //             'items' => $items->map(fn($t) => [
-    //                 'label'      => $t->title,
-    //                 'icon'       => 'pi pi-fw pi-home',
-    //                 'to'         => "/transcripts/{$t->id}",
-    //                 'created_at' => $t->created_at->format('d/m/Y H:i:s'),
-    //             ])->values()->all(),
-    //         ];
-    //     })->values();
-
-    //     $paginator->setCollection($grouped);
-    //     return $paginator;
-    // }
 
     public function deleteTranscript(int $id): JsonResponse|bool
     {
@@ -123,18 +115,4 @@ class TranscriptService
 
         return $transcript;
     }
-
-
-
-    
-    // public function filterTranscription(Request $request) {
-    //     $search = $request['search'];
-    //     // $query = Transcript::query();
-
-    //     if (!empty($search)) {
-    //         $this->transcript->where('patient', 'ILIKE', "%{$search}%");
-    //     }
-
-    //     return response()->json($this->transcript->latest()->get());
-    // }
 }

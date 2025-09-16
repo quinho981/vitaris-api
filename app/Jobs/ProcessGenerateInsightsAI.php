@@ -47,6 +47,10 @@ class ProcessGenerateInsightsAI implements ShouldQueue
                 'identified_symptoms' => $response->identified_symptoms,
                 'possible_diagnoses' => $response->possible_diagnoses,
             ], 60);
+
+            $document->transcript()->update([
+                'description' => $insights['medical_analysis']['brief_description'][0] ?? null
+            ]);
         }
     }
 }

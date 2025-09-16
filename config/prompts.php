@@ -41,7 +41,8 @@ return [
             'medical_analysis': {
                 'main_topics': ['topic', 'topic2', 'topic3'],
                 'identified_symptoms': ['symptoms', 'symptoms2', 'symptoms3'],
-                'possible_diagnoses': ['diagnoses', 'diagnoses2', 'diagnoses3']
+                'possible_diagnoses': ['diagnoses', 'diagnoses2', 'diagnoses3'],
+                'brief_description': ['description'],
             }
         }
 

@@ -21,12 +21,6 @@ class TranscriptController extends Controller
         
         return $this->transcriptService->getUserTranscripts($userId);
     }
-    
-    // public function indexByUserPerDate() {
-    //     $userId = Auth::id();
-        
-    //     return $this->transcriptService->getTitleUserTranscriptsPerDate($userId);
-    // }
 
     public function show(int $id) {
         return $this->transcriptService->getTranscriptAndDocument($id);
@@ -43,5 +37,10 @@ class TranscriptController extends Controller
 
     public function getConversations(int $id) {
         return $this->transcriptService->getConversations($id);
+    }
+
+    public function filterUserTranscripts(Request $request) {
+        $request = request()->all();
+        return $this->transcriptService->searchUserTranscripts($request);
     }
 }

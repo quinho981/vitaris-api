@@ -90,14 +90,12 @@ class DocumentService
         ];
 
         if ($forceJsonFormat) {
-            Log::info('Passou pelo json');
-
             $payload['response_format'] = [ 'type' => 'json_object' ];
         }
 
         try {
             $response = Groq::chat()->completions()->create($payload);
-            Log::info('LLM Response: ' . json_encode($response));
+            // Log::info('LLM Response: ' . json_encode($response));
         } catch (\Throwable $e) {
             Log::error('Erro no Groq: ' . $e->getMessage());
             throw $e;

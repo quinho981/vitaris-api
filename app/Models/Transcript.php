@@ -17,7 +17,8 @@ class Transcript extends Model
         'conversation',
         'end_conversation_time',
         'transcript_type_id',
-        'file_size'
+        'file_size',
+        'description'
     ];
 
     protected $casts = [
