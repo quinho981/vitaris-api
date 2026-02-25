@@ -78,6 +78,7 @@ class TranscriptService
                 'transcriptType:id,type'
             ])
             ->select(['id', 'transcript_type_id', 'patient', 'end_conversation_time', 'file_size', 'description', 'created_at'])
+            ->selectRaw('LEFT(description, 86) as description')
             ->latest();
     }
 
