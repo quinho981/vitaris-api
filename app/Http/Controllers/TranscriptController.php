@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\DeepgramService;
 use App\Services\TranscriptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,16 +11,33 @@ use Illuminate\Support\Facades\Auth;
 class TranscriptController extends Controller
 {
     protected TranscriptService $transcriptService;
+    protected DeepgramService $deepgramService;
 
-    public function __construct(TranscriptService $transcriptService)
+    public function __construct(TranscriptService $transcriptService, DeepgramService $deepgramService)
     {
         $this->transcriptService = $transcriptService;
+        $this->deepgramService = $deepgramService;
     }
 
     public function indexByUser() {
         $userId = Auth::id(); 
         
         return $this->transcriptService->getUserTranscripts($userId);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'audio' => 'required|file'
+        ]);
+
+        $file = $request->file('audio');
+        $mimeType = $file->getMimeType();
+        $audioContent = file_get_contents($file->getRealPath());
+
+        $result = $this->deepgramService->transcribe($audioContent, $mimeType);
+
+        return response()->json($result);
     }
 
     public function show(int $id) {

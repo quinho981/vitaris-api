@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'deepgram' => [
+        'key' => env('DEEPGRAM_API_KEY'),
+    ],
 ];

@@ -20,6 +20,7 @@ Route::get('user/transcripts', [TranscriptController::class, 'indexByUser'])->mi
 Route::get('transcripts/{id}', [TranscriptController::class, 'show'])->middleware('auth:sanctum');
 Route::get('transcripts/{id}/conversations', [TranscriptController::class, 'getConversations'])->middleware('auth:sanctum');
 Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->middleware('auth:sanctum');
+Route::post('transcripts', [TranscriptController::class, 'store'])->middleware('auth:sanctum');
 Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
 Route::get('transcripts/user/filter', [TranscriptController::class, 'filterUserTranscripts'])->middleware('auth:sanctum');
 
