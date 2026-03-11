@@ -63,7 +63,6 @@ class DocumentService
     public function generateLlmDocument($context): array
     {
         $response = $this->llmResponseByTemplate($context, 'anamnesis');
-
         $title = $this->extractTitleFromContent($response);
         
         return [
@@ -95,7 +94,6 @@ class DocumentService
 
         try {
             $response = Groq::chat()->completions()->create($payload);
-            // Log::info('LLM Response: ' . json_encode($response));
         } catch (\Throwable $e) {
             Log::error('Erro no Groq: ' . $e->getMessage());
             throw $e;
@@ -123,5 +121,61 @@ class DocumentService
     public function generateInsightsAI($context) {
         $insights = $this->llmResponseByTemplate($context, 'ai_insights', true);
         return json_decode($insights, true);
+    }
+
+    public function refineDocument(array $data): string
+    {
+        $instructions = $this->buildRefinementInstructions(
+            $data['refinements'] ?? [],
+            $data['custom_instruction'] ?? null
+        );
+
+        $promptTemplate = config("prompts.anamnesis_dynamic_refine");
+
+        $prompt = str_replace(
+            ['{instructions}', '{context}'],
+            [$instructions, $data['conversation']],
+            $promptTemplate
+        );
+
+        $response = Groq::chat()->completions()->create([
+            'model' => self::MODEL_NAME,
+            'temperature' => 0.2,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ],
+            ],
+        ]);
+
+        return $response['choices'][0]['message']['content'];
+    }
+
+    private function buildRefinementInstructions(array $refinements, ?string $custom): string
+    {
+        $instructions = [];
+
+        if (in_array('clarity', $refinements)) {
+            $instructions[] = "- Improve clarity and sentence structure for better readability.";
+        }
+
+        if (in_array('technical', $refinements)) {
+            $instructions[] = "- Use more formal and technical medical terminology.";
+        }
+
+        if (in_array('soap', $refinements)) {
+            $instructions[] = "- Reorganize the document into SOAP format (Subjetivo, Objetivo, Avaliação, Plano).";
+        }
+
+        if (!empty($custom)) {
+            $instructions[] = "- Additional instruction: " . $custom;
+        }
+
+        if (empty($instructions)) {
+            $instructions[] = "- Improve the overall quality while maintaining structure.";
+        }
+
+        return implode("\n", $instructions);
     }
 }

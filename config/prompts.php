@@ -57,4 +57,25 @@ return [
 
         Always respond in Portuguese.
     ",
+    "anamnesis_dynamic_refine" => "
+        You are a senior medical editor.
+
+        Your task is to refine the following medical document according to the instructions below.
+
+        IMPORTANT:
+        - Maintain ALL clinical information.
+        - Do NOT invent new data.
+        - Do NOT remove CID codes.
+        - Keep valid HTML structure
+        - Paragraphs between topics. Use <br>
+        - Keep section titles if they exist.
+
+        Refinement Instructions:
+        {instructions}
+
+        Medical Document:
+        {context}
+
+        Always respond in Portuguese.
+    ",
 ];
