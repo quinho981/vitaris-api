@@ -11,15 +11,25 @@ class AiInsights extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'main_topics',
-        'identified_symptoms',
+        'red_flags',
+        'case_severity',
+        'brief_description',
         'possible_diagnoses',
+        'suggested_cid_codes',
+        'suggested_exams',
+        'suggested_conducts',
+        'missing_clinical_information'
     ];
 
     protected $casts = [
-        'main_topics' => 'array',
-        'identified_symptoms' => 'array',
+        'red_flags' => 'array',
+        'case_severity' => 'array',
+        'brief_description' => 'array',
         'possible_diagnoses' => 'array',
+        'suggested_cid_codes' => 'array',
+        'suggested_exams' => 'array',
+        'suggested_conducts' => 'array',
+        'missing_clinical_information' => 'array'
     ];
 
     public function document(): BelongsTo

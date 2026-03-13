@@ -88,7 +88,7 @@ class TranscriptService
             ->with([
                 'document:id,transcript_id,document_template_id,result,created_at',
                 'document.documentTemplate:id,name',
-                'document.ai_insights:id,document_id,main_topics,identified_symptoms,possible_diagnoses'
+                'document.ai_insights:id,document_id,possible_diagnoses,red_flags,case_severity,brief_description,possible_diagnoses,suggested_cid_codes,suggested_exams,suggested_conducts,missing_clinical_information'
             ])
             ->where('id', $id)
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
