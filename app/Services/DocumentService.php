@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Document;
+use App\Models\DocumentTemplate;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,7 @@ class DocumentService
 
     public function generateDocumentAndStore($request)
     {
-        $documentContent = $this->generateLlmDocument($request['conversation']);
+        $documentContent = $this->generateLlmDocument($request['conversation'], $request['template']);
         $documentContent['patient'] = $request['patient'] ?? $documentContent['title'];
 
         $transcript = DB::transaction(function () use ($request, $documentContent) {
@@ -60,9 +61,11 @@ class DocumentService
         ]);
     }
 
-    public function generateLlmDocument($context): array
-    {
-        $response = $this->llmResponseByTemplate($context, 'anamnesis');
+    public function generateLlmDocument($context, $templateId): array
+    {   
+        $template = DocumentTemplate::findOrFail($templateId);
+
+        $response = $this->llmResponseByTemplate($context, $template->content);
         $title = $this->extractTitleFromContent($response);
         
         return [
@@ -75,8 +78,7 @@ class DocumentService
     {
         $context = $this->mergeContextChunks($context);
 
-        $promptTemplate = config("prompts.$template");
-        $prompt = str_replace('{context}', $context, $promptTemplate);
+        $prompt = str_replace('{context}', $context, $template);
 
         $payload = [
             'model' => self::MODEL_NAME,
@@ -119,7 +121,8 @@ class DocumentService
     }
 
     public function generateInsightsAI($context) {
-        $insights = $this->llmResponseByTemplate($context, 'ai_insights', true);
+        $promptTemplate = config("prompts.ai_insights");
+        $insights = $this->llmResponseByTemplate($context, $promptTemplate, true);
         return json_decode($insights, true);
     }
 

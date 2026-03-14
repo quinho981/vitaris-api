@@ -10,6 +10,6 @@ class DocumentTemplateController extends Controller
 {
     public function index()
     {
-        return DocumentTemplate::all();
+        return DocumentTemplate::orderBy('id')->get();
     }
 }

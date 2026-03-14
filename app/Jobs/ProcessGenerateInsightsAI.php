@@ -34,17 +34,17 @@ class ProcessGenerateInsightsAI implements ShouldQueue
 
         if($document) {
             $insights = $documentService->generateInsightsAI($this->conversation);
-            // Log::info('Storing AI Insights for Document ID ' . $this->documentId , $insights);
+            $medicalAnalysis = $insights['medical_analysis'];
 
             $response = $document->ai_insights()->create([
-                'red_flags' => $insights['medical_analysis']['red_flags'],
-                'case_severity' => $insights['medical_analysis']['case_severity'],
-                'brief_description' => $insights['medical_analysis']['brief_description'],
-                'possible_diagnoses' => $insights['medical_analysis']['possible_diagnoses'],
-                'suggested_cid_codes' => $insights['medical_analysis']['suggested_cid_codes'],
-                'suggested_exams' => $insights['medical_analysis']['suggested_exams'],
-                'suggested_conducts' => $insights['medical_analysis']['suggested_conducts'],
-                'missing_clinical_information' => $insights['medical_analysis']['missing_clinical_information']
+                'red_flags' => $medicalAnalysis['red_flags'],
+                'case_severity' => $medicalAnalysis['case_severity'],
+                'brief_description' => $medicalAnalysis['brief_description'],
+                'possible_diagnoses' => $medicalAnalysis['possible_diagnoses'],
+                'suggested_cid_codes' => $medicalAnalysis['suggested_cid_codes'],
+                'suggested_exams' => $medicalAnalysis['suggested_exams'],
+                'suggested_conducts' => $medicalAnalysis['suggested_conducts'],
+                'missing_clinical_information' => $medicalAnalysis['missing_clinical_information']
             ]);
 
             Cache::put("insights_ai_{$this->documentId}", [
@@ -59,7 +59,7 @@ class ProcessGenerateInsightsAI implements ShouldQueue
             ], 60);
 
             $document->transcript()->update([
-                'description' => $insights['medical_analysis']['brief_description'][0] ?? null
+                'description' => $medicalAnalysis['brief_description'][0] ?? null
             ]);
         }
     }
