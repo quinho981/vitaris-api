@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -31,9 +32,9 @@ class Transcript extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function document(): HasOne 
+    public function document(): HasMany 
     {
-        return $this->hasOne(Document::class);
+        return $this->hasMany(Document::class);
     }
 
     public function transcriptType(): BelongsTo 

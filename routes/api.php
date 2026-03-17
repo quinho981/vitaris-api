@@ -27,6 +27,7 @@ Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('
 Route::get('transcripts/user/filter', [TranscriptController::class, 'filterUserTranscripts'])->middleware('auth:sanctum');
 
 Route::get('templates', [DocumentTemplateController::class, 'index'])->middleware('auth:sanctum');
+Route::get('templates/count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
 Route::get('types', [TranscriptTypesController::class, 'index'])->middleware('auth:sanctum');
 
 Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
