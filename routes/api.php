@@ -10,25 +10,37 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
-Route::get('/tokens', [AuthController::class, 'tokens'])->middleware('auth:sanctum');
-Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken'])->middleware('auth:sanctum');
 
-Route::post('generate-document', [DocumentController::class, 'generate'])->middleware('auth:sanctum');
-Route::post('refine', [DocumentController::class, 'refine'])->middleware('auth:sanctum');
-Route::post('document/{document}', [DocumentController::class, 'update'])->middleware('auth:sanctum');
-Route::get('user/transcripts', [TranscriptController::class, 'indexByUser'])->middleware('auth:sanctum');
-Route::get('transcripts/{id}', [TranscriptController::class, 'show'])->middleware('auth:sanctum');
-Route::get('transcripts/{id}/conversations', [TranscriptController::class, 'getConversations'])->middleware('auth:sanctum');
-Route::delete('transcripts/{id}', [TranscriptController::class, 'delete'])->middleware('auth:sanctum');
-Route::post('transcripts', [TranscriptController::class, 'store'])->middleware('auth:sanctum');
-Route::put('transcripts', [TranscriptController::class, 'update'])->middleware('auth:sanctum');
-Route::get('transcripts/user/filter', [TranscriptController::class, 'filterUserTranscripts'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+    
+    Route::get('/tokens', [AuthController::class, 'tokens']);
+    Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken']);
 
-Route::get('templates', [DocumentTemplateController::class, 'index'])->middleware('auth:sanctum');
-Route::get('templates/count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
-Route::get('types', [TranscriptTypesController::class, 'index'])->middleware('auth:sanctum');
+    Route::prefix('documents')->group(function () {
+        Route::post('/generate', [DocumentController::class, 'generate']);
+        Route::post('/refine', [DocumentController::class, 'refine']);
+        Route::put('/{document}', [DocumentController::class, 'update']);
+    });
+    Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
+
+    Route::prefix('transcripts')->group(function () {
+        Route::post('/', [TranscriptController::class, 'store']);
+        Route::get('/user/filter', [TranscriptController::class, 'filterUserTranscripts']);
+        Route::put('/{transcript}', [TranscriptController::class, 'update']);
+        Route::get('/{id}', [TranscriptController::class, 'show']);
+        Route::get('/{id}/conversations', [TranscriptController::class, 'getConversations']);
+        Route::delete('/{id}', [TranscriptController::class, 'delete']);
+    });
+
+    Route::prefix('templates')->group(function () {
+        Route::get('/', [DocumentTemplateController::class, 'index']);
+        Route::get('/with-documents-count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
+    });
+    Route::get('transcript-types', [TranscriptTypesController::class, 'index']);
+});
+
 
 Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
     return response()->stream(function () use ($documentId) {

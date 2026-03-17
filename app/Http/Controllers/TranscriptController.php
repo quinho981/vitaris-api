@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transcript;
 use App\Services\DeepgramService;
 use App\Services\TranscriptService;
 use Illuminate\Http\Request;
@@ -44,9 +45,14 @@ class TranscriptController extends Controller
         return $this->transcriptService->getTranscriptAndDocument($id);
     }
 
-    public function update() {
-        $request = request()->all();
-        return $this->transcriptService->updateTranscript($request['id'], $request);
+    public function update(Transcript $transcript, Request $request) {
+        $data = $request()->all();
+        $transcript->update($data);
+
+        return response()->json([
+            'success' => $transcript,
+            'message' => 'Transcript updated successfully',
+        ], 200);
     }
 
     public function delete(int $id) {

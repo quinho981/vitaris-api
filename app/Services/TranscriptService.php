@@ -23,20 +23,6 @@ class TranscriptService
         return $this->transcript->create($data);
     }
 
-    public function updateTranscript(int $id, array $data): JsonResponse|bool
-    {
-        $transcript = $this->transcript->find($id);
-
-        if (!$transcript) {
-            return false;
-        }
-
-        return response()->json([
-            'success' => $transcript->update($data),
-            'message' => 'Transcript updated successfully',
-        ], 200);
-    }
-
     public function getUserTranscripts(int $userId): LengthAwarePaginator
     {
         return $this->baseTranscriptHistoryQuery()
