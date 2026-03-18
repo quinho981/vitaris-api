@@ -13,7 +13,7 @@ class DocumentTemplateController extends Controller
         return DocumentTemplate::orderBy('id')->get();
     }
 
-    public function userTemplatesWithDocumentsCount(): DocumentTemplate
+    public function userTemplatesWithDocumentsCount()
     {
         $userId = Auth::id();
 

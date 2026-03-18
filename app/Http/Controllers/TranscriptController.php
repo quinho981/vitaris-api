@@ -46,7 +46,8 @@ class TranscriptController extends Controller
     }
 
     public function update(Transcript $transcript, Request $request) {
-        $data = $request()->all();
+        $data = $request->all();
+        
         $transcript->update($data);
 
         return response()->json([
