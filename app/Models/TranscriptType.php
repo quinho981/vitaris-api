@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TranscriptType extends Model
@@ -16,8 +16,8 @@ class TranscriptType extends Model
         'type'
     ];
 
-    public function transcript(): HasOne
+    public function transcripts(): HasMany
     {
-        return $this->hasOne(Transcript::class);
+        return $this->hasMany(Transcript::class);
     }
 }

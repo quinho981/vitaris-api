@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transcript;
+use App\Services\DashboardService;
 use App\Services\DeepgramService;
 use App\Services\TranscriptService;
 use Illuminate\Http\Request;
@@ -13,11 +14,17 @@ class TranscriptController extends Controller
 {
     protected TranscriptService $transcriptService;
     protected DeepgramService $deepgramService;
+    protected DashboardService $dashboardService;
 
-    public function __construct(TranscriptService $transcriptService, DeepgramService $deepgramService)
+    public function __construct(
+        TranscriptService $transcriptService, 
+        DeepgramService $deepgramService, 
+        DashboardService $dashboardService
+    )
     {
         $this->transcriptService = $transcriptService;
         $this->deepgramService = $deepgramService;
+        $this->dashboardService = $dashboardService;
     }
 
     public function indexByUser() {
@@ -65,7 +72,20 @@ class TranscriptController extends Controller
     }
 
     public function filterUserTranscripts(Request $request) {
-        $request = request()->all();
+        $request = $request->all();
         return $this->transcriptService->searchUserTranscripts($request);
+    }
+
+    public function getDashboardSummary() {
+        return $this->dashboardService->summary();
+    }
+    
+    public function getDashboardCharts() {
+        return $this->dashboardService->charts();
+    }
+
+    public function getlatestRecentTranscripts()
+    {
+        return $this->dashboardService->latestRecentTranscripts();
     }
 }

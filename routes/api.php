@@ -39,6 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/with-documents-count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
     });
     Route::get('transcript-types', [TranscriptTypesController::class, 'index']);
+    
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/summary', [TranscriptController::class, 'getDashboardSummary']);
+        Route::get('/charts', [TranscriptController::class, 'getDashboardCharts']);
+        Route::get('/last-transcripts', [TranscriptController::class, 'getlatestRecentTranscripts']);
+    });
 });
 
 

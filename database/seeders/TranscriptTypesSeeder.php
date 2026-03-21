@@ -10,6 +10,7 @@ class TranscriptTypesSeeder extends Seeder
     const TYPES = [
         [ 'id' => 1, 'name' => 'Consulta geral' ],
         [ 'id' => 2, 'name' => 'Retorno' ],
+        [ 'id' => 3, 'name' => 'Urgente' ],
     ];
 
     /**
