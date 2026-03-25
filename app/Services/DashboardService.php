@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\TranscriptsType;
 use App\Models\Transcript;
 use App\Models\TranscriptType;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
@@ -15,18 +17,17 @@ class DashboardService
         $startToday = now()->startOfDay();
         $endToday = now()->endOfDay();
         
-        $totalTranscripts = $this->baseQuery($userId, $startToday, $endToday)->count();
-        $totalTimeTranscripts = $this->baseQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
+        $totalTranscripts = Cache::remember("dashboard:summary:today:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
+                                return $this->baseQuery($userId, $startToday, $endToday)->count();
+                            });
 
-        // CRIAR UM ENUM PARA OS TRANSCRIPTS TYPES
-        // CRIAR UM ENUM PARA OS TRANSCRIPTS TYPES
-        // CRIAR UM ENUM PARA OS TRANSCRIPTS TYPES
-        // CRIAR UM ENUM PARA OS TRANSCRIPTS TYPES
-        // ADICIONAR CACHE
-        // ADICIONAR CACHE
-        // ADICIONAR CACHE
-        // ADICIONAR CACHE
-        $totalUrgentTranscripts = $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', 3)->count();
+        $totalTimeTranscripts = Cache::remember("dashboard:summary:time:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
+                                return $this->baseQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
+                            });
+
+        $totalUrgentTranscripts = Cache::remember("dashboard:summary:urgent:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
+                                return $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsType::URGENTE->value)->count();
+                            });
 
         return [
             'totalTranscripts' => $totalTranscripts,
@@ -48,13 +49,15 @@ class DashboardService
 
     public function latestRecentTranscripts()
     {
+        $userId = Auth::id();
+
         return Transcript::select('id', 'patient', 'end_conversation_time', 'transcript_type_id')
             ->with([
                 'transcriptType:id,type',
                 'document:id,transcript_id,document_template_id',
                 'document.documentTemplate:id,name'
             ])
-            ->where('user_id', 1)
+            ->where('user_id', $userId)
             ->latest()
             ->limit(4)
             ->get();
@@ -76,7 +79,8 @@ class DashboardService
 
     private function currentWeekTranscripts($userId)
     {
-        return Transcript::query()
+        return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId) {
+            return Transcript::query()
             ->selectRaw("
                 EXTRACT(DOW FROM created_at AT TIME ZONE 'America/Sao_Paulo') as day_of_week,
                 COUNT(*) as total
@@ -88,20 +92,34 @@ class DashboardService
             ])
             ->groupBy('day_of_week')
             ->orderBy('day_of_week')
-            ->get();
+            ->get()
+            ->toArray();
+        });
     }
 
     private function countTranscriptByType($userId) {
-        return TranscriptType::select(['id', 'type'])
-            ->withCount([
-                'transcripts' => function ($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                    $query->whereBetween('created_at', [
-                        now()->startOfWeek(),
-                        now()->endOfWeek()
-                    ]);
-                }
-            ])
-            ->get();
+        return Cache::remember("dashboard:charts:type:{$userId}", 600, function () use ($userId) {
+            return TranscriptType::select(['id', 'type'])
+                ->withCount([
+                    'transcripts' => function ($query) use ($userId) {
+                        $query->where('user_id', $userId);
+                        $query->whereBetween('created_at', [
+                            now()->startOfWeek(),
+                            now()->endOfWeek()
+                        ]);
+                    }
+                ])
+                ->get()
+                ->toArray();
+        });
+    }
+
+    public static function clear($userId)
+    {
+        Cache::forget("dashboard:summary:today:{$userId}");
+        Cache::forget("dashboard:summary:time:{$userId}");
+        Cache::forget("dashboard:summary:urgent:{$userId}");
+        Cache::forget("dashboard:charts:week:{$userId}");
+        Cache::forget("dashboard:charts:type:{$userId}");
     }
 }

@@ -3,10 +3,22 @@
 namespace App\Observers;
 
 use App\Models\Transcript;
+use App\Services\DashboardService;
 
 class TranscriptObserver
 {
-    public function updating(Transcript $transcript): void
+    /**
+     * Handle the Transcript "created" event.
+     */
+    public function created(Transcript $transcript):void
+    {
+        DashboardService::clear($transcript->user_id);
+    }
+
+    /**
+     * Handle the Transcript "updated" event.
+     */
+    public function updated(Transcript $transcript): void
     {
         if ($transcript->isDirty('title')) {
             $transcript->document()->update([
@@ -16,10 +28,12 @@ class TranscriptObserver
     }
 
     /**
-     * Handle the Transcript "deleting" event.
+     * Handle the Transcript "deleted" event.
      */
-    public function deleting(Transcript $transcript): void
+    public function deleted(Transcript $transcript): void
     {
         $transcript->document()->delete();
+
+        DashboardService::clear($transcript->user_id);
     }
 }
