@@ -5,6 +5,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\TranscriptController;
 use App\Http\Controllers\TranscriptTypesController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
@@ -13,11 +14,16 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
-    
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+
     Route::get('/tokens', [AuthController::class, 'tokens']);
     Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken']);
 
+    Route::prefix('user')->group(function () {
+        Route::get('/', [UserController::class, 'show']);
+        Route::put('/', [UserController::class, 'update']);
+    });
+    
     Route::prefix('documents')->group(function () {
         Route::post('/generate', [DocumentController::class, 'generate']);
         Route::post('/refine', [DocumentController::class, 'refine']);
@@ -36,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('templates')->group(function () {
         Route::get('/', [DocumentTemplateController::class, 'index']);
+        Route::get('/minimal', [DocumentTemplateController::class, 'getIdNameTemplate']);
         Route::get('/with-documents-count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
     });
     Route::get('transcript-types', [TranscriptTypesController::class, 'index']);

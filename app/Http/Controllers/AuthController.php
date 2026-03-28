@@ -61,15 +61,28 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully']);
     }
 
-    public function user(Request $request)
+    public function changePassword(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
 
-        $user = User::select(['id', 'name', 'email'])
-                    ->with('plans')
-                    ->find($userId);
-        
-        return response()->json($user);
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'message' => 'A senha atual está incorreta!'
+            ], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        return response()->json([
+            'message' => 'Password updated successfully'
+        ]);
     }
 
     public function tokens(Request $request)

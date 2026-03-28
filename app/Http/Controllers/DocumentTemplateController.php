@@ -29,4 +29,10 @@ class DocumentTemplateController extends Controller
             ])
             ->get();
     }
+
+    public function getIdNameTemplate()
+    {
+        return DocumentTemplate::select('id', 'name')
+            ->get();
+    }
 }
