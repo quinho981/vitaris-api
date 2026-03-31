@@ -48,11 +48,15 @@ class TranscriptController extends Controller
         return response()->json($result);
     }
 
-    public function show(int $id) {
-        return $this->transcriptService->getTranscriptAndDocument($id);
+    public function show(Transcript $transcript) {
+        $this->authorize('view', $transcript);
+
+        return $this->transcriptService->getTranscriptAndDocument($transcript->id);
     }
 
     public function update(Transcript $transcript, Request $request) {
+        $this->authorize('update', $transcript);
+
         $data = $request->all();
         
         $transcript->update($data);
@@ -63,17 +67,24 @@ class TranscriptController extends Controller
         ], 200);
     }
 
-    public function delete(int $id) {
-        return $this->transcriptService->deleteTranscript($id);
+    public function delete(Transcript $transcript)
+    {
+        $this->authorize('delete', $transcript);
+
+        return $this->transcriptService->deleteTranscript($transcript->id);
     }
 
-    public function getConversations(int $id) {
-        return $this->transcriptService->getConversations($id);
+    public function getConversations(Transcript $transcript) {
+        $this->authorize('getConversations', $transcript);
+
+        return $this->transcriptService->getConversations($transcript->id);
     }
 
     public function filterUserTranscripts(Request $request) {
+        $userId = Auth::id();
         $request = $request->all();
-        return $this->transcriptService->searchUserTranscripts($request);
+
+        return $this->transcriptService->searchUserTranscripts($request, $userId);
     }
 
     public function getDashboardSummary() {

@@ -18,6 +18,8 @@ class DocumentController extends Controller
 
     public function update(Document $document, Request $request)
     {
+        $this->authorize('update', $document);
+
         $data = $request->all();
         $document->update($data);
 

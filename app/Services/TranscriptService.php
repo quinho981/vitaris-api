@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TranscriptService
 {
@@ -30,13 +31,14 @@ class TranscriptService
             ->paginate(10);
     }
 
-    public function searchUserTranscripts($request): Collection
+    public function searchUserTranscripts($request, $userId): Collection
     {
         $username = $request['user'] ?? null;
         $date = $request['date'] ?? null;
         $type = $request['type'] ?? null;
 
-        $query = $this->baseTranscriptHistoryQuery();
+        $query = $this->baseTranscriptHistoryQuery()
+            ->where('user_id', $userId);
 
         if($username) {
             $query->where('patient', 'ILIKE', "%{$username}%");

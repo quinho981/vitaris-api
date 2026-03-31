@@ -35,9 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [TranscriptController::class, 'store']);
         Route::get('/user/filter', [TranscriptController::class, 'filterUserTranscripts']);
         Route::put('/{transcript}', [TranscriptController::class, 'update']);
-        Route::get('/{id}', [TranscriptController::class, 'show']);
-        Route::get('/{id}/conversations', [TranscriptController::class, 'getConversations']);
-        Route::delete('/{id}', [TranscriptController::class, 'delete']);
+        Route::get('/{transcript}', [TranscriptController::class, 'show']);
+        Route::get('/{transcript}/conversations', [TranscriptController::class, 'getConversations']);
+        Route::delete('/{transcript}', [TranscriptController::class, 'delete']);
     });
 
     Route::prefix('templates')->group(function () {
