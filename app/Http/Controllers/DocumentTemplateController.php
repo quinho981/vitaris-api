@@ -17,7 +17,10 @@ class DocumentTemplateController extends Controller
     {
         $userId = Auth::id();
 
-        return DocumentTemplate::select('id', 'name', 'description')
+        return DocumentTemplate::select('id', 'name', 'description', 'category_id')
+            ->with([
+                'category:id,name,color,icon'
+            ])
             ->withCount([
                 'documents as total' => function ($query) use ($userId) {
                     $query->withTrashed()
