@@ -3,29 +3,39 @@
 namespace Database\Seeders;
 
 use App\Models\DocumentTemplate;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class DocumentTemplateSeeder extends Seeder
 {
-    const TEMPLATES = [
-        [ 'id' => 1, 'name' => 'Cardiologia' ],
-        [ 'id' => 2, 'name' => 'Ortopedia' ],
-        [ 'id' => 3, 'name' => 'Neurologia' ],
-        [ 'id' => 4, 'name' => 'Oftalmologia' ],
-        [ 'id' => 5, 'name' => 'Clínica médica' ],
-        [ 'id' => 6, 'name' => 'Pediatria' ]
-    ];
-
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        foreach (self::TEMPLATES as $type) {
+        $filePath = database_path('data/categories.xlsx');
+
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $header = array_map('strtolower', array_shift($rows));
+
+        foreach ($rows as $row) {
+            $data = array_combine($header, $row);
+
+            if (empty($data['id']) || empty($data['name'])) {
+                continue;
+            }
+
             DocumentTemplate::updateOrCreate(
-                ['id' => $type['id']],
-                ['name' => $type['name']]
+                ['id' => $data['id']],
+                [
+                    'category_id' => $data['category_id'] ?? null,
+                    'name' => $data['name'],
+                    'description' => $data['description'] ?? null,
+                    'content' => $data['content'] ?? null,
+                ]
             );
         }
     }
