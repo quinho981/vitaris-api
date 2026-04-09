@@ -42,8 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('templates')->group(function () {
         Route::get('/', [DocumentTemplateController::class, 'index']);
-        Route::get('/minimal', [DocumentTemplateController::class, 'getIdNameTemplate']);
-        Route::get('/with-documents-count', [DocumentTemplateController::class, 'userTemplatesWithDocumentsCount']);
+        Route::get('/minimal', [DocumentTemplateController::class, 'listIdNameTemplate']);
+        Route::get('/with-documents-count', [DocumentTemplateController::class, 'listTemplatesWithUserDocumentsCount']);
+        Route::get('/count-categories', [DocumentTemplateController::class, 'listCountCategories']);
     });
     Route::get('transcript-types', [TranscriptTypesController::class, 'index']);
     

@@ -21,6 +21,7 @@ class DocumentPolicy
      */
     private function isOwner(User $user, Document $document): bool
     {
-        return $user->id === $document->transcript->user_id;
+        $documentUserId = $document->transcript()->withTrashed()->value('user_id');
+        return $user->id === $documentUserId;
     }
 }
