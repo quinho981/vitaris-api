@@ -26,6 +26,7 @@ class TranscriptService
 
     public function getUserTranscripts(int $userId): LengthAwarePaginator
     {
+        // TODO: aplicar cache com redis
         return $this->baseTranscriptHistoryQuery()
             ->where('user_id', $userId)
             ->paginate(10);
@@ -62,8 +63,9 @@ class TranscriptService
         return $this->transcript
             ->with([
                 'document:id,transcript_id,document_template_id',
-                'document.documentTemplate:id,name',
-                'transcriptType:id,type'
+                'document.documentTemplate:id,name,category_id',
+                'document.documentTemplate.category:id,color',
+                'transcriptType:id,type',
             ])
             ->select(['id', 'transcript_type_id', 'patient', 'end_conversation_time', 'file_size', 'description', 'created_at'])
             ->selectRaw('LEFT(description, 86) as description')
