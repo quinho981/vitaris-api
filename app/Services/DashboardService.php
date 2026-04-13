@@ -17,23 +17,24 @@ class DashboardService
         $startToday = now()->startOfDay();
         $endToday = now()->endOfDay();
         
-        $totalTranscripts = Cache::remember("dashboard:summary:today:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->count();
-                            });
-
-        $totalTimeTranscripts = Cache::remember("dashboard:summary:time:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
-                            });
-
-        $totalUrgentTranscripts = Cache::remember("dashboard:summary:urgent:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsType::URGENTE->value)->count();
-                            });
-
+        $data = Cache::remember(
+            "summary_today:{$userId}",
+            300,
+            function () use ($userId, $startToday, $endToday) { 
+                return $this->baseQuery($userId, $startToday, $endToday)
+                    ->selectRaw('
+                        COUNT(*) as total,
+                        SUM(end_conversation_time) as total_time,
+                        SUM(CASE WHEN transcript_type_id = ? THEN 1 ELSE 0 END) as urgent
+                    ', [TranscriptsType::URGENTE->value])
+                    ->first();
+            }
+        );
         return [
-            'totalTranscripts' => $totalTranscripts,
-            'totalTimeTranscripts' => $totalTimeTranscripts,
-            'totalUrgentTranscripts' => $totalUrgentTranscripts,
-            'averageTranscriptsTime' => $this->averageTranscriptsTime($totalTimeTranscripts, $totalTranscripts),
+            'totalTranscripts' => (int) $data->total,
+            'totalTimeTranscripts' => (float) ($data->total_time ?? 0 ),
+            'totalUrgentTranscripts' => (int) ($data->urgent ?? 0),
+            'averageTranscriptsTime' => $this->averageTranscriptsTime($data->total_time, $data->total),
         ];
     }
 
@@ -116,9 +117,7 @@ class DashboardService
 
     public static function clear($userId)
     {
-        Cache::forget("dashboard:summary:today:{$userId}");
-        Cache::forget("dashboard:summary:time:{$userId}");
-        Cache::forget("dashboard:summary:urgent:{$userId}");
+        Cache::forget("dashboard:summary_today:{$userId}");
         Cache::forget("dashboard:charts:week:{$userId}");
         Cache::forget("dashboard:charts:type:{$userId}");
     }
