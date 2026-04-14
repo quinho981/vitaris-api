@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('transcripts')->group(function () {
         Route::post('/', [TranscriptController::class, 'store']);
+        Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
         Route::get('/user/filter', [TranscriptController::class, 'filterUserTranscripts']);
         Route::put('/{transcript}', [TranscriptController::class, 'update']);
         Route::get('/{transcript}', [TranscriptController::class, 'show']);

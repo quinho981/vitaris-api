@@ -81,19 +81,20 @@ class DashboardService
     {
         return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId) {
             return Transcript::query()
-            ->selectRaw("
-                EXTRACT(DOW FROM created_at AT TIME ZONE 'America/Sao_Paulo') as day_of_week,
-                COUNT(*) as total
-            ")
-            ->where('user_id', $userId)
-            ->whereBetween('created_at', [
-                now()->startOfWeek(),
-                now()->endOfWeek()
-            ])
-            ->groupBy('day_of_week')
-            ->orderBy('day_of_week')
-            ->get()
-            ->toArray();
+                ->selectRaw("
+                    EXTRACT(DOW FROM created_at AT TIME ZONE 'America/Sao_Paulo') as day_of_week,
+                    COUNT(*) as total
+                ")
+                ->where('user_id', $userId)
+                ->whereBetween('created_at', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ])
+                ->withTrashed()
+                ->groupBy('day_of_week')
+                ->orderBy('day_of_week')
+                ->get()
+                ->toArray();
         });
     }
 
@@ -102,6 +103,7 @@ class DashboardService
             return TranscriptType::select(['id', 'type'])
                 ->withCount([
                     'transcripts' => function ($query) use ($userId) {
+                        $query->withTrashed();
                         $query->where('user_id', $userId);
                         $query->whereBetween('created_at', [
                             now()->startOfWeek(),
