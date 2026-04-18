@@ -13,15 +13,15 @@ use Illuminate\Support\Facades\Auth;
 class TranscriptService
 {
     protected Transcript $transcript;
+    protected DeepgramService $deepgramService;
 
-    public function __construct(Transcript $transcript)
+    public function __construct(
+        Transcript $transcript, 
+        DeepgramService $deepgramService
+    )
     {
         $this->transcript = $transcript;
-    }
-
-    public function storeTranscript(array $data): Transcript
-    {
-        return $this->transcript->create($data);
+        $this->deepgramService = $deepgramService;
     }
 
     public function getUserTranscripts(int $userId): LengthAwarePaginator
@@ -84,18 +84,10 @@ class TranscriptService
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }
 
-    public function deleteTranscript(int $id): JsonResponse|bool
+    public function deleteTranscript(int $id): void
     {
-        $transcript = $this->transcript->find($id);
-
-        if (!$transcript) {
-            return false;
-        }
-
-        return response()->json([
-            'success' => $transcript->delete(),
-            'message' => 'Transcript deleted successfully',
-        ], 200);
+        $transcript = $this->transcript->findOrFail($id);
+        $transcript->delete();
     }
 
     public function getConversations(int $id): object
@@ -105,5 +97,73 @@ class TranscriptService
             ->first(['id', 'conversation']);
 
         return $transcript;
+    }
+
+    public function processAudioAndBuildConversation($request): array
+    {
+        $file = $request->file('audio');
+  
+        $audio = $this->getAudioContent($file);
+        $utterances = $this->deepgramService->transcribeAudio($audio['content'], $audio['mimeType']);
+        $conversation = $this->organizeUtterances($utterances);
+
+        return [
+            'file' => $file,
+            'utterances' => $utterances,
+            'conversation' => $conversation,
+        ];
+    }
+
+    public function processAudioAndCreate($request): Transcript
+    {
+        [
+            'file' => $file,
+            'utterances' => $utterances,
+            'conversation' => $conversation
+        ] = $this->processAudioAndBuildConversation($request);
+
+        $transcript = Transcript::create([
+            'user_id' => Auth::id(),
+            'patient' => $request['patient'],
+            'conversation' => $conversation,
+            'transcript_type_id' => $request['type'],
+            'end_conversation_time' => $this->getLastEndUtteranceTime($utterances),
+            'file_size' => $file->getSize()
+        ]);
+
+        return $transcript;
+    }
+
+    private function getAudioContent($file): array
+    {
+        $mimeType = $file->getMimeType();
+        $content = file_get_contents($file->getRealPath());
+
+        return ['content' => $content, 'mimeType' => $mimeType];
+    }
+
+    private function organizeUtterances($utterances): array
+    {
+        $conversation = [];
+
+        foreach ($utterances as $utterance) {
+            $conversation[] = [
+                // 'speaker' => $utterance['speaker'],
+                'text' => $utterance['transcript'],
+                'start' => round($utterance['start'], 2),
+                'end' => round($utterance['end'], 2)
+            ];
+        }
+
+        return $conversation;
+    }
+
+    public function getLastEndUtteranceTime($utterances)
+    {
+        if (empty($utterances)) return 0;
+
+        $lastUtterance = end($utterances);
+        // TODO: AJUSTAR TIPO DE DADO NO BANCO PARA CONSEGUIR REGISTRAR FLOAT
+        return floor($lastUtterance['end']);
     }
 }

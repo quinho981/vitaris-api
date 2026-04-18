@@ -27,7 +27,7 @@ class DocumentController extends Controller
     }
 
     public function generate(Request $request) {
-        return $this->documentService->generateDocumentAndStore($request->all());
+        return $this->documentService->createDocumentAndDispatchInsights($request->all());
     }
 
     public function refine(Request $request)

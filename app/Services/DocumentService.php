@@ -24,54 +24,29 @@ class DocumentService
         $this->transcriptService = $transcriptService;
     }
 
-    public function storeDocument(int $transcriptId, array $data): Document
-    {
-        return Document::create($data, $transcriptId);
-    }
-
-    public function generateDocumentAndStore($request)
+    public function createDocumentAndDispatchInsights($request)
     {
         $documentContent = $this->generateLlmDocument($request['conversation'], $request['template']);
-        $documentContent['patient'] = $request['patient'] ?? $documentContent['title'];
 
-        $transcript = DB::transaction(function () use ($request, $documentContent) {
-            $transcript = $this->transcriptService->storeTranscript([
-                'user_id' => Auth::id(),
-                'patient' => $documentContent['patient'],
-                'conversation' => $request['conversation'],
-                'transcript_type_id' => $request['type'],
-                'end_conversation_time' => $request['endConversationTime'],
-                'file_size' => $request['fileSize'] ?? null
-            ]);
-
-            $document = $transcript->document()->create([
-                'document_template_id' => $request['template'],
-                'patient' => $documentContent['patient'],
-                'result' => $documentContent['content']
-            ]);
-
-            ProcessGenerateInsightsAI::dispatch($document->id, $request['conversation']);
-
-            return $transcript;
-        });
-        
-        return response()->json([
-            'transcript_id' => $transcript->id,
-            'content' => $documentContent['content']
+        $document = Document::create([
+            'document_template_id' => $request['template'],
+            'patient' => $request['patient'],
+            'result' => $documentContent,
+            'transcript_id' => $request['transcript_id']
         ]);
+
+        ProcessGenerateInsightsAI::dispatch($document->id, $request['conversation']);
+
+        return $document;
     }
 
-    public function generateLlmDocument($context, $templateId): array
+    public function generateLlmDocument($context, $templateId)
     {   
         $template = DocumentTemplate::findOrFail($templateId);
 
         $response = $this->llmResponseByTemplate($context, $template->content);
-        $title = $this->extractTitleFromContent($response);
         
-        return [
-            'title' => $title,
-            'content' => $response
-        ];
+        return $response;
     }
 
     public function llmResponseByTemplate($context, $template, bool $forceJsonFormat = false): string
@@ -104,12 +79,6 @@ class DocumentService
         return $response['choices'][0]['message']['content'];
     }
 
-    public function extractTitleFromContent($content) {
-        preg_match("/<h2><strong>(.*?)<\/strong><\/h2>/", $content, $matches);
-        
-        return $matches[1] ?? 'Consulta ' . Carbon::now()->format('Y/m/d H:i:s');
-    }
-
     public function mergeContextChunks($contextChunks): string
     {
         $mergedContext = '';
@@ -120,7 +89,8 @@ class DocumentService
 
     }
 
-    public function generateInsightsAI($context) {
+    public function generateInsightsAI($context) 
+    {
         $promptTemplate = config("prompts.ai_insights");
         $insights = $this->llmResponseByTemplate($context, $promptTemplate, true);
         return json_decode($insights, true);

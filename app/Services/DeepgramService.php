@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class DeepgramService
 {
-    public function transcribe($audioContent, $mimeType)
+    public function transcribeAudio($audioContent, $mimeType)
     {
         $response = Http::withHeaders([
             'Authorization' => 'Token ' . config('services.deepgram.key'),
@@ -24,6 +24,8 @@ class DeepgramService
         ->withBody($audioContent, $mimeType)
         ->post('https://api.deepgram.com/v1/listen');
 
-        return $response->json();
+        $responseJson = $response->json();
+
+        return $responseJson['results']['utterances'];
     }
 }

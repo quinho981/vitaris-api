@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/count-categories', [DocumentTemplateController::class, 'listCountCategories']);
     });
     Route::get('transcript-types', [TranscriptTypesController::class, 'index']);
+    Route::get('transcript-types/minimal', [TranscriptTypesController::class, 'listMinimal']);
     
     Route::prefix('dashboard')->group(function () {
         Route::get('/summary', [TranscriptController::class, 'getDashboardSummary']);

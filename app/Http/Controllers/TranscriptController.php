@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTranscriptRequest;
+use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Transcript;
 use App\Services\DashboardService;
 use App\Services\DeepgramService;
 use App\Services\DocumentService;
 use App\Services\TranscriptService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TranscriptController extends Controller
 {
@@ -37,88 +41,57 @@ class TranscriptController extends Controller
         return $this->transcriptService->getUserTranscripts($userId);
     }
 
-    public function store(Request $request)
+    public function store(StoreTranscriptRequest $request): JsonResponse
     {
-        $request->validate([
-            'audio' => 'required|file'
-        ]);
-        $file = $request->file('audio');
-        
-        $audio = $this->getAudioContent($file);
+        $transcript = $this->transcriptService->processAudioAndCreate($request);
 
-        $result = $this->deepgramService->transcribe($audio['content'], $audio['mimeType']);
-
-        return response()->json($result);
+        return response()->json($transcript, 201);
     }
 
-    public function storeAndGenerateDocument(Request $request)
+    public function storeAndGenerateDocument(StoreTranscriptRequest $request)
     {
-        $request->validate([
-            'type' => 'required|integer',
-            'template' => 'required|integer',
-            'patient' => 'nullable|string',
-            'audio' => 'required|file'
-        ]);
-        $file = $request->file('audio');
+        [
+            'file' => $file,
+            'utterances' => $utterances,
+            'conversation' => $conversation
+        ] = $this->transcriptService->processAudioAndBuildConversation($request);
 
-        $audio = $this->getAudioContent($file);
+        $documentContent = $this->documentService->generateLlmDocument($conversation, $request['template']);
 
-        $resultTranscribe = $this->deepgramService->transcribe($audio['content'], $audio['mimeType']);
-        $utterances = $resultTranscribe['results']['utterances'];
-        
-        $conversation = $this->organizeUtterances($utterances);
-
-        $result = $this->documentService->generateDocumentAndStore(
-            array_merge($request->all(), [
+        $document = DB::transaction(function () use ($request, $file, $utterances, $conversation, $documentContent) {
+            $transcript = Transcript::create([
+                'user_id' => Auth::id(),
+                'patient' => $request['patient'],
                 'conversation' => $conversation,
-                'endConversationTime' => $this->getLastEndUtteranceTime($utterances),
-                'fileSize' => $file->getSize()
-            ]));
-
-        return response()->json($result->original);
-    }
-
-    private function getAudioContent($file)
-    {
-        $mimeType = $file->getMimeType();
-        $content = file_get_contents($file->getRealPath());
-
-        return ['content' => $content, 'mimeType' => $mimeType];
-    }
+                'transcript_type_id' => $request['type'],
+                'end_conversation_time' => $this->transcriptService->getLastEndUtteranceTime($utterances),
+                'file_size' => $file->getSize()
+            ]);
     
-    private function organizeUtterances($utterances)
-    {
-        $conversation = [];
+            $document = $transcript->document()->create([
+                'document_template_id' => $request['template'],
+                'patient' => $request['patient'],
+                'result' => $documentContent,
+                'transcript_id' => $request['transcript_id']
+            ]);
 
-        foreach ($utterances as $utterance) {
-            $conversation[] = [
-                // 'speaker' => $utterance['speaker'],
-                'text' => $utterance['transcript'],
-                'start' => floor($utterance['start']),
-                'end' => floor($utterance['end'])
-            ];
-        }
+            return $document;
+        });
 
-        return $conversation;
+        ProcessGenerateInsightsAI::dispatch($document->id, $conversation);
+
+        return $document;
     }
 
-    private function getLastEndUtteranceTime($utterances)
+    public function show(Transcript $transcript)
     {
-        if (empty($utterances)) {
-            return 0;
-        }
-
-        $lastUtterance = end($utterances);
-        return floor($lastUtterance['end']);
-    }
-
-    public function show(Transcript $transcript) {
         $this->authorize('view', $transcript);
 
         return $this->transcriptService->getTranscriptAndDocument($transcript->id);
     }
 
-    public function update(Transcript $transcript, Request $request) {
+    public function update(Transcript $transcript, Request $request): JsonResponse
+    {
         $this->authorize('update', $transcript);
 
         $data = $request->all();
@@ -131,31 +104,39 @@ class TranscriptController extends Controller
         ], 200);
     }
 
-    public function delete(Transcript $transcript)
+    public function delete(Transcript $transcript): JsonResponse
     {
         $this->authorize('delete', $transcript);
 
-        return $this->transcriptService->deleteTranscript($transcript->id);
+        $this->transcriptService->deleteTranscript($transcript->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Transcript deleted successfully',
+        ], 200);
     }
 
-    public function getConversations(Transcript $transcript) {
+    public function getConversations(Transcript $transcript) 
+    {
         $this->authorize('getConversations', $transcript);
 
         return $this->transcriptService->getConversations($transcript->id);
     }
 
-    public function filterUserTranscripts(Request $request) {
+    public function filterUserTranscripts(Request $request) 
+    {
         $userId = Auth::id();
-        $request = $request->all();
 
-        return $this->transcriptService->searchUserTranscripts($request, $userId);
+        return $this->transcriptService->searchUserTranscripts($request->all(), $userId);
     }
 
-    public function getDashboardSummary() {
+    public function getDashboardSummary() 
+    {
         return $this->dashboardService->summary();
     }
     
-    public function getDashboardCharts() {
+    public function getDashboardCharts() 
+    {
         return $this->dashboardService->charts();
     }
 

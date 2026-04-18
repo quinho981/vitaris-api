@@ -98,6 +98,7 @@ class DocumentTemplateController extends Controller
     public function listIdNameTemplate()
     {
         return DocumentTemplate::select('id', 'name')
+            ->orderBy('name')
             ->get();
     }
 }
