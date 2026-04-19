@@ -60,7 +60,7 @@ class DashboardService
     {
         $userId = Auth::id();
 
-        return Transcript::select('id', 'patient', 'end_conversation_time', 'transcript_type_id')
+        return Transcript::select('id', 'patient', 'end_conversation_time', 'transcript_type_id', 'created_at')
             ->with([
                 'transcriptType:id,type',
                 'document:id,transcript_id,document_template_id',
