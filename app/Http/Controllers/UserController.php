@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,21 +14,21 @@ class UserController extends Controller
     {
         $userId = Auth::id();
 
-        $user = User::select(['id', 'name', 'email'])
+        $user = User::select(['id', 'name', 'email', 'phone'])
                     ->with('plans')
                     ->find($userId);
         
         return response()->json($user);
     }
 
-    public function update(Request $request)
+    public function update(UpdateUserRequest $request)
     {
-        $data = $request->all();
-        
-        $user = $request->user()->update($data);
+        $user = $request->user();
+
+        $user->update($request->validated());
 
         return response()->json([
-            'success' => $user,
+            'success' => true,
             'message' => 'User updated successfully',
         ], 200);
     }
