@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Services\DocumentService;
 use Illuminate\Http\Request;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class DocumentController extends Controller
 {
@@ -37,5 +38,20 @@ class DocumentController extends Controller
         return response()->json([
             'content' => $refined
         ]);
+    }
+     
+    public function generatePdf(Document $document)
+    {
+        $this->authorize('update', $document);
+
+        return Pdf::view('pdf.clinical_document', [
+            'content' => $document->result,
+            'patient_name' => $document->transcript->user->name,
+            'template_name' => $document->documentTemplate->name,
+            'created_at' => \Carbon\Carbon::parse($document->created_at)->format('d/m/Y H:i'),
+        ])
+        ->format('A4')
+        ->name("document_{$document->id}.pdf")
+        ->download();
     }
 }

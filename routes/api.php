@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/generate', [DocumentController::class, 'generate']);
         Route::post('/refine', [DocumentController::class, 'refine']);
         Route::put('/{document}', [DocumentController::class, 'update']);
+        Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });
     Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
 
