@@ -89,11 +89,9 @@ class DashboardService
     private function documentBaseQuery($userId, $start, $end)
     {
         return Document::query()
-            ->with([
-                'transcript' => function ($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                }
-            ])
+            ->whereHas('transcript', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->whereBetween('created_at', [$start, $end]);
     }
 

@@ -178,6 +178,9 @@
                 font-size: 10px;
                 color: #fff;
             }
+            li {
+                margin-left: 1.7rem;
+            }
         </style>
     </head>
     <body>
