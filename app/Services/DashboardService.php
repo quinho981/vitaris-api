@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\TranscriptsType;
+use App\Enums\TranscriptsTypeEnum;
 use App\Models\Document;
 use App\Models\Transcript;
 use App\Models\TranscriptType;
@@ -27,7 +27,7 @@ class DashboardService
                             });
 
         $urgentTranscriptsCountToday = Cache::remember("dashboard:summary:urgent:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsType::URGENTE->value)->count();
+                                return $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsTypeEnum::URGENTE->value)->count();
                             });
 
         $transcriptsCountWithTrashedToday = $this->baseQuery($userId, $startToday, $endToday)->withTrashed()->count();

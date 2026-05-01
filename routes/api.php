@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
@@ -55,6 +56,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/summary', [TranscriptController::class, 'getDashboardSummary']);
         Route::get('/charts', [TranscriptController::class, 'getDashboardCharts']);
         Route::get('/last-transcripts', [TranscriptController::class, 'getlatestRecentTranscripts']);
+    });
+});
+
+use Illuminate\Http\Request;
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/subscription-checkout', function (Request $request) {
+        $plan = PriceIdsEnum::from($request->plan);
+
+        $checkout = $request->user()
+            ->newSubscription('pro', $plan->priceId())
+            ->allowPromotionCodes()
+            ->checkout([
+                'success_url' => config('app.frontend_url'),
+                'cancel_url' => config('app.frontend_url'),
+            ]);
+
+        return response()->json([
+            'url' => $checkout->url
+        ]);
     });
 });
 

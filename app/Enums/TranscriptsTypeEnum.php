@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum TranscriptsType: int
+enum TranscriptsTypeEnum: int
 {
     case CONSULTA_GERAL = 1;
     case RETORNO = 2;
