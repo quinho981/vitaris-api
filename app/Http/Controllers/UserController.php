@@ -15,10 +15,14 @@ class UserController extends Controller
         $userId = Auth::id();
 
         $user = User::select(['id', 'name', 'email', 'phone'])
-                    ->with('plans')
                     ->find($userId);
         
-        return response()->json($user);
+        $plan = $user->plan();
+        
+        return response()->json([
+            'user' => $user,
+            'plan' => $plan
+        ]);
     }
 
     public function update(UpdateUserRequest $request)

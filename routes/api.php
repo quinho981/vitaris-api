@@ -4,6 +4,7 @@ use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TranscriptController;
 use App\Http\Controllers\TranscriptTypesController;
 use App\Http\Controllers\UserController;
@@ -27,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('documents')->group(function () {
         Route::post('/generate', [DocumentController::class, 'generate']);
-        Route::post('/refine', [DocumentController::class, 'refine']);
+        Route::post('/refine', [DocumentController::class, 'refine'])->middleware('subscription');
         Route::put('/{document}', [DocumentController::class, 'update']);
         Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });
@@ -57,27 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/charts', [TranscriptController::class, 'getDashboardCharts']);
         Route::get('/last-transcripts', [TranscriptController::class, 'getlatestRecentTranscripts']);
     });
-});
 
-use Illuminate\Http\Request;
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/subscription-checkout', function (Request $request) {
-        $plan = PriceIdsEnum::from($request->plan);
-
-        $checkout = $request->user()
-            ->newSubscription('pro', $plan->priceId())
-            ->allowPromotionCodes()
-            ->checkout([
-                'success_url' => config('app.frontend_url'),
-                'cancel_url' => config('app.frontend_url'),
-            ]);
-
-        return response()->json([
-            'url' => $checkout->url
-        ]);
+    Route::prefix('subscription')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'index']);
+        Route::post('/checkout', [SubscriptionController::class, 'checkout']);
+        Route::post('/cancel', [SubscriptionController::class, 'cancel']);
     });
 });
-
 
 Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
     return response()->stream(function () use ($documentId) {
@@ -88,15 +75,12 @@ Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
             $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
 
             if ($response) {
-                echo "data: " . json_encode($response) . "\n\n";
                 ob_flush();
                 flush();
                 break; // encerra a conexão após enviar
             }
 
             if ((time() - $start) > $timeout) {
-                echo "event: timeout\n";
-                echo "data: {}\n\n";
                 ob_flush();
                 flush();
                 break;

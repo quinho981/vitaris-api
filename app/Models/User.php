@@ -49,11 +49,32 @@ class User extends Authenticatable
         ];
     }
 
-    public function plans()
+    public function subscriptions()
     {
-        return $this->belongsToMany(Plan::class, 'user_plans', 'user_id', 'plan_id')
-                    ->withTimestamps()
-                    ->withPivot(['unsubscription_at', 'active'])
-                    ->latest();
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function plan()
+    {
+        $subscription = $this->subscriptions()
+            ->where('stripe_status', 'active')
+            ->orWhere('stripe_status', 'trialing')
+            ->first();
+
+        if (!$subscription) {
+            return (object) ['name' => 'Free'];
+        }
+
+        return (object) ['name' => 'Pro'];
+    }
+
+    public function hasProPlan(): bool
+    {
+        return $this->subscriptions()
+            ->where(function ($query) {
+                $query->where('stripe_status', 'active')
+                      ->orWhere('stripe_status', 'trialing');
+            })
+            ->exists();
     }
 }

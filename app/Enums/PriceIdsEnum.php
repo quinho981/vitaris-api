@@ -12,8 +12,8 @@ enum PriceIdsEnum: string
     {
         return match($this) {
             self::PRO_MONTHLY => 'price_1TS1KWCagX8WWsbY6ammIfD7',
-            self::PRO_SEMESTER => 'price_1TS1LYCagX8WWsbYueoncZAP',
-            self::PRO_ANNUAL => 'price_1TS1LYCagX8WWsbYMkKqzyZp',
+            self::PRO_SEMESTER => 'price_1TT5sVCagX8WWsbY6jl4WUSr',
+            self::PRO_ANNUAL => 'price_1TT5t4CagX8WWsbY5va9lc5T',
         };
     }
 }
