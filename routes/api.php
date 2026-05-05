@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [SubscriptionController::class, 'index']);
         Route::post('/checkout', [SubscriptionController::class, 'checkout']);
         Route::post('/cancel', [SubscriptionController::class, 'cancel']);
+        Route::get('/verify-checkout', [SubscriptionController::class, 'verifyCheckout']);
     });
 });
 
