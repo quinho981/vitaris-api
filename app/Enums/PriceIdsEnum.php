@@ -16,4 +16,13 @@ enum PriceIdsEnum: string
             self::PRO_ANNUAL => 'price_1TT5t4CagX8WWsbY5va9lc5T',
         };
     }
+
+    public function label(): string
+    {
+        return match($this) {
+            self::PRO_MONTHLY => 'Vitalfy Profissional Mensal',
+            self::PRO_SEMESTER => 'Vitalfy Profissional Semestral',
+            self::PRO_ANNUAL => 'Vitalfy Profissional Anual',
+        };
+    }
 }

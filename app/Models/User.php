@@ -56,25 +56,23 @@ class User extends Authenticatable
 
     public function plan()
     {
-        $subscription = $this->subscriptions()
-            ->where('stripe_status', 'active')
-            ->orWhere('stripe_status', 'trialing')
-            ->first();
+        $subscription = $this->activeSubscription()->first();
 
-        if (!$subscription) {
-            return (object) ['name' => 'Free'];
-        }
-
-        return (object) ['name' => 'Pro'];
+        return $subscription ? (object) ['name' => $subscription->type] : (object) ['name' => 'Free'];
     }
 
     public function hasProPlan(): bool
     {
+        return $this->activeSubscription()->exists();
+    }
+
+    private function activeSubscription()
+    {
         return $this->subscriptions()
+            ->where('stripe_status', 'active')
             ->where(function ($query) {
-                $query->where('stripe_status', 'active')
-                      ->orWhere('stripe_status', 'trialing');
-            })
-            ->exists();
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', now());
+            });
     }
 }

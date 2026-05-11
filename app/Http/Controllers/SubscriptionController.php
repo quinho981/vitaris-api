@@ -15,7 +15,11 @@ class SubscriptionController extends Controller
         $user = $request->user();
         $subscription = $user->subscriptions()
             ->where('stripe_status', 'active')
-            ->orWhere('stripe_status', 'trialing')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', now());
+            })
+            ->latest()
             ->first();
 
         return response()->json([
@@ -30,7 +34,7 @@ class SubscriptionController extends Controller
         $plan = PriceIdsEnum::from($request->plan);
         
         $checkout = $request->user()
-            ->newSubscription('pro', $plan->priceId())
+            ->newSubscription($plan->label(), $plan->priceId())
             ->allowPromotionCodes()
             ->checkout([
                 'success_url' => config('app.frontend_url') . '/?checkout_success=true&session_id={CHECKOUT_SESSION_ID}',
