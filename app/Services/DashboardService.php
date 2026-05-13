@@ -7,31 +7,32 @@ use App\Models\Document;
 use App\Models\Transcript;
 use App\Models\TranscriptType;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
-    public function summary() 
+    public function summary(): array
     {
         $userId = Auth::id();
         $startToday = now()->startOfDay();
         $endToday = now()->endOfDay();
         
         $transcriptsCountToday = Cache::remember("dashboard:summary:today:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->count();
+                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->count();
                             });
 
         $transcriptsDurationToday = Cache::remember("dashboard:summary:time:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
+                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
                             });
 
         $urgentTranscriptsCountToday = Cache::remember("dashboard:summary:urgent:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->baseQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsTypeEnum::URGENTE->value)->count();
+                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsTypeEnum::URGENTE->value)->count();
                             });
 
-        $transcriptsCountWithTrashedToday = $this->baseQuery($userId, $startToday, $endToday)->withTrashed()->count();
-        $documentCountWithTrashehdToday = $this->getDocumentsWithTrashed($userId, $startToday, $endToday);
+        $transcriptsCountWithTrashedToday = $this->transcriptsTodayQuery($userId, $startToday, $endToday)->withTrashed()->count();
+        $documentCountWithTrashehdToday = $this->documentsTodayQuery($userId, $startToday, $endToday)->withTrashed()->count();
 
         return [
             'transcriptsCountToday' => $transcriptsCountToday,
@@ -40,23 +41,25 @@ class DashboardService
             'averageTranscriptsTime' => $this->averageTranscriptsTime($transcriptsDurationToday, $transcriptsCountToday),
             
             'transcriptsCountWithTrashedToday' => $transcriptsCountWithTrashedToday,
-            'transcriptDiscarded' => $this->baseQuery($userId, $startToday, $endToday)->onlyTrashed()->count(),
+            'transcriptDiscarded' => $this->transcriptsTodayQuery($userId, $startToday, $endToday)->onlyTrashed()->count(),
             'documentCountWithTrashehdToday' => $documentCountWithTrashehdToday,
-            'documentDiscarded' => $this->documentBaseQuery($userId, $startToday, $endToday)->onlyTrashed()->count()
+            'documentDiscarded' => $this->documentsTodayQuery($userId, $startToday, $endToday)->onlyTrashed()->count()
         ];
     }
 
-    public function charts()
+    public function charts(): array
     {
         $userId = Auth::id();
+        $startWeek = now()->startOfWeek();
+        $endWeek = now()->endOfWeek();
 
         return [
-            'transcriptsByWeek' => $this->currentWeekTranscripts($userId),
-            'transcriptsByType' => $this->countWeekTranscriptByType($userId)
+            'transcriptsByWeek' => $this->currentWeekTranscripts($userId, $startWeek, $endWeek),
+            'transcriptsByType' => $this->countWeekTranscriptByType($userId, $startWeek, $endWeek)
         ];
     }
 
-    public function latestRecentTranscripts()
+    public function latestRecentTranscripts(): Collection
     {
         $userId = Auth::id();
 
@@ -72,50 +75,32 @@ class DashboardService
             ->get();
     }
 
-    private function baseQuery($userId, $start, $end)
+    private function transcriptsTodayQuery(int $userId, Carbon $start, Carbon $end)
     {
-        return Transcript::query()
-            ->where('user_id', $userId)
-            ->whereBetween('created_at', [$start, $end]);
+        return Transcript::fromUserBetWeenDates($userId, $start, $end);
     }
 
-    private function getDocumentsWithTrashed($userId, $start, $end)
+    private function documentsTodayQuery(int $userId, Carbon $start, Carbon $end)
     {
-        return $this->documentBaseQuery($userId, $start, $end)
-            ->withTrashed()
-            ->count();
+        return Document::fromUserBetweenDatesViaTranscript($userId, $start, $end);
     }
 
-    private function documentBaseQuery($userId, $start, $end)
-    {
-        return Document::query()
-            ->whereHas('transcript', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
-            ->whereBetween('created_at', [$start, $end]);
-    }
-
-    private function averageTranscriptsTime($totalTimeTranscripts, $totalTranscripts)
+    private function averageTranscriptsTime(int|float $totalTimeTranscripts, int $totalTranscripts)
     {
         if($totalTranscripts <= 0) return 0;
-
         return $totalTimeTranscripts / $totalTranscripts;
     }
 
-    private function currentWeekTranscripts($userId)
+    private function currentWeekTranscripts(int $userId, Carbon $startWeek, Carbon $endWeek)
     {
-        return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId) {
+        return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId, $startWeek, $endWeek) {
             return Transcript::query()
                 ->selectRaw("
                     EXTRACT(DOW FROM created_at AT TIME ZONE 'America/Sao_Paulo') as day_of_week,
                     COUNT(*) as total
                 ")
                 ->where('user_id', $userId)
-                ->whereBetween('created_at', [
-                    now()->startOfWeek(),
-                    now()->endOfWeek()
-                ])
-                // ->withTrashed()
+                ->whereBetween('created_at', [$startWeek, $endWeek])
                 ->groupBy('day_of_week')
                 ->orderBy('day_of_week')
                 ->get()
@@ -123,17 +108,14 @@ class DashboardService
         });
     }
 
-    private function countWeekTranscriptByType($userId) {
-        return Cache::remember("dashboard:charts:type:{$userId}", 600, function () use ($userId) {
+    private function countWeekTranscriptByType(int $userId, Carbon $startWeek, Carbon $endWeek)
+    {
+        return Cache::remember("dashboard:charts:type:{$userId}", 600, function () use ($userId, $startWeek, $endWeek) {
             return TranscriptType::select(['id', 'type'])
                 ->withCount([
-                    'transcripts' => function ($query) use ($userId) {
-                        // $query->withTrashed();
+                    'transcripts' => function ($query) use ($userId, $startWeek, $endWeek) {
                         $query->where('user_id', $userId);
-                        $query->whereBetween('created_at', [
-                            now()->startOfWeek(),
-                            now()->endOfWeek()
-                        ]);
+                        $query->whereBetween('created_at', [$startWeek, $endWeek]);
                     }
                 ])
                 ->get()
@@ -141,7 +123,7 @@ class DashboardService
         });
     }
 
-    public static function clear($userId)
+    public static function clear(int $userId)
     {
         Cache::forget("dashboard:summary:today:{$userId}");
         Cache::forget("dashboard:summary:time:{$userId}");
