@@ -77,7 +77,7 @@ class DashboardService
 
     private function transcriptsTodayQuery(int $userId, Carbon $start, Carbon $end)
     {
-        return Transcript::fromUserBetWeenDates($userId, $start, $end);
+        return Transcript::fromUserBetweenDates($userId, $start, $end);
     }
 
     private function documentsTodayQuery(int $userId, Carbon $start, Carbon $end)

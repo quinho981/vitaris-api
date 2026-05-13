@@ -38,7 +38,7 @@ class Transcript extends Model
         return $this->hasOne(Document::class);
     }
 
-    public function transcriptType(): BelongsTo 
+    public function transcriptType(): BelongsTo
     {
         return $this->belongsTo(TranscriptType::class);
     }

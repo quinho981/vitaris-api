@@ -15,6 +15,8 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
@@ -22,24 +24,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tokens', [AuthController::class, 'tokens']);
     Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken']);
 
-    Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
-
     Route::prefix('user')->group(function () {
         Route::get('/', [UserController::class, 'show']);
         Route::put('/', [UserController::class, 'update']);
     });
     
     Route::prefix('documents')->group(function () {
-        Route::post('/generate', [DocumentController::class, 'generate']);
-        Route::post('/refine', [DocumentController::class, 'refine'])->middleware('subscription');
+        Route::post('/generate', [DocumentController::class, 'generate'])
+            ->middleware('free.transcript.limit');
+        Route::post('/refine', [DocumentController::class, 'refine'])
+            ->middleware('check.subscription');
         Route::put('/{document}', [DocumentController::class, 'update']);
+            // ->middleware('free.transcript.limit');
         Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });
     Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
 
     Route::prefix('transcripts')->group(function () {
-        Route::post('/', [TranscriptController::class, 'store']);
-        Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
+        Route::middleware('free.transcript.limit')->group(function () {
+            Route::post('/', [TranscriptController::class, 'store']);
+            Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
+        });
         Route::get('/user/filter', [TranscriptController::class, 'filterUserTranscripts']);
         Route::put('/{transcript}', [TranscriptController::class, 'update']);
         Route::get('/{transcript}', [TranscriptController::class, 'show']);
@@ -68,33 +73,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cancel', [SubscriptionController::class, 'cancel']);
         Route::get('/verify-checkout', [SubscriptionController::class, 'verifyCheckout']);
     });
-});
-
-Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
-    return response()->stream(function () use ($documentId) {
-
-        $timeout = 15;
-        $start = time();
-        while (true) {
-            $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
-
-            if ($response) {
-                ob_flush();
-                flush();
-                break; // encerra a conexão após enviar
+    
+    Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
+        return response()->stream(function () use ($documentId) {
+    
+            $timeout = 15;
+            $start = time();
+            while (true) {
+                $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
+    
+                if ($response) {
+                    ob_flush();
+                    flush();
+                    break; // encerra a conexão após enviar
+                }
+    
+                if ((time() - $start) > $timeout) {
+                    ob_flush();
+                    flush();
+                    break;
+                }
+    
+                sleep(1);
             }
-
-            if ((time() - $start) > $timeout) {
-                ob_flush();
-                flush();
-                break;
-            }
-
-            sleep(1);
-        }
-    }, 200, [
-        'Content-Type' => 'text/event-stream',
-        'Cache-Control' => 'no-cache',
-        'Connection' => 'keep-alive',
-    ]);
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+        ]);
+    });
 });

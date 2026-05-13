@@ -12,8 +12,6 @@ class CheckSubscription
     {
         $user = $request->user();
         
-        if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
-
         if (!$user->hasProPlan()) {
             return response()->json([
                 'message' => 'This feature requires a Pro subscription',
