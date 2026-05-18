@@ -220,7 +220,7 @@ class TranscriptService
 
         foreach ($utterances as $utterance) {
             $conversation[] = [
-                // 'speaker' => $utterance['speaker'],
+                'speaker' => $utterance['speaker'],
                 'text' => $utterance['transcript'],
                 'start' => round($utterance['start'], 2),
                 'end' => round($utterance['end'], 2)
